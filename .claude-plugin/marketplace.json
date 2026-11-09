@@ -1,0 +1,14 @@
+{
+  "name": "minutas-video",
+  "description": "Plugin minutas-video para Claude Code.",
+  "owner": {
+    "name": "Juliocbm"
+  },
+  "plugins": [
+    {
+      "name": "minutas-video",
+      "source": "./",
+      "description": "Convierte grabaciones de reuniones (video o audio) en transcripción con tiempos, capturas de pantalla, transcripción ilustrada en HTML y minuta."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "minutas-video",
+  "version": "0.1.0",
+  "description": "Convierte grabaciones de reuniones (video o audio) en transcripción con tiempos, capturas de pantalla, transcripción ilustrada en HTML y minuta. Whisper local con GPU opcional; los requisitos se instalan solos con uv.",
+  "author": {
+    "name": "Juliocbm",
+    "url": "https://github.com/Juliocbm"
+  },
+  "homepage": "https://github.com/Juliocbm/minutas-video",
+  "repository": "https://github.com/Juliocbm/minutas-video",
+  "license": "MIT",
+  "keywords": ["transcripcion", "minutas", "reuniones", "whisper", "video", "audio", "teams", "zoom"]
+}

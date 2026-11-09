@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Salidas y grabaciones: contienen el contenido de reuniones, nunca se suben
+*_minuta/
+salidas/
+_revision/
+*.mkv
+*.mp4
+*.mov
+*.webm
+*.m4a
+*.mp3
+*.wav
+*.vtt
+*.srt
+
+# Espacios de trabajo de evaluación
+*-workspace/
