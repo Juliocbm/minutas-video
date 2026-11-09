@@ -16,6 +16,9 @@ _revision/
 *.wav
 *.vtt
 *.srt
+# … salvo el ejemplo ficticio, que sí se publica
+!docs/ejemplo/*.vtt
+!docs/ejemplo/*.srt
 
 # Espacios de trabajo de evaluación
 *-workspace/

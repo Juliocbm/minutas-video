@@ -1,0 +1,50 @@
+{
+ "meta": {
+  "modo": "pantalla",
+  "video": "reunion-demo.mp4 (ficticio)",
+  "truncado": false,
+  "duracion": 345
+ },
+ "capturas": [
+  {
+   "n": 1,
+   "archivo": "capturas/0001_00-00-00.jpg",
+   "t": 1,
+   "desde": 0,
+   "motivo": "inicio",
+   "cambio": 0.0
+  },
+  {
+   "n": 2,
+   "archivo": "capturas/0002_00-00-58.jpg",
+   "t": 59,
+   "desde": 58,
+   "motivo": "estable",
+   "cambio": 0.6
+  },
+  {
+   "n": 3,
+   "archivo": "capturas/0003_00-02-08.jpg",
+   "t": 129,
+   "desde": 128,
+   "motivo": "estable",
+   "cambio": 0.6
+  },
+  {
+   "n": 4,
+   "archivo": "capturas/0004_00-03-25.jpg",
+   "t": 206,
+   "desde": 205,
+   "motivo": "estable",
+   "cambio": 0.6
+  },
+  {
+   "n": 5,
+   "archivo": "capturas/0005_00-04-45.jpg",
+   "t": 286,
+   "desde": 285,
+   "motivo": "estable",
+   "cambio": 0.6
+  }
+ ]
+}

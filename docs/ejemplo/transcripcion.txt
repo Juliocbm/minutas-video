@@ -1,0 +1,22 @@
+[00:00:03] Ana Torres: Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista. Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.
+[00:00:19] Luis Méndez: Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.
+[00:00:28] Sofía Ramírez: Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.
+[00:00:38] Ana Torres: Bien. Empecemos con las métricas, que son buenas noticias.
+[00:00:58] Ana Torres: En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.
+[00:01:10] Luis Méndez: ¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.
+[00:01:22] Ana Torres: Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.
+[00:01:36] Sofía Ramírez: Propongo medirlo antes de cambiar nada, para no adivinar.
+[00:01:50] Ana Torres: De acuerdo, lo anoto como pendiente mío.
+[00:02:08] Luis Méndez: Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación. Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.
+[00:02:36] Ana Torres: ¿Qué propones?
+[00:02:42] Luis Méndez: Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.
+[00:03:00] Ana Torres: Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.
+[00:03:25] Sofía Ramírez: Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve. Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.
+[00:03:55] Luis Méndez: Por mí bien; es solo de la interfaz, no toca la API.
+[00:04:08] Ana Torres: Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?
+[00:04:20] Sofía Ramírez: Sí, para el viernes.
+[00:04:45] Ana Torres: Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.
+[00:05:00] Luis Méndez: ¿Y si no está listo?
+[00:05:06] Ana Torres: Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.
+[00:05:20] Sofía Ramírez: Entonces revisamos el estado el diecinueve, ¿les parece?
+[00:05:30] Ana Torres: Perfecto. Revisión el diecinueve. Gracias a los dos.

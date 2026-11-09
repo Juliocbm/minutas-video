@@ -1,0 +1,166 @@
+{
+ "meta": {
+  "fuente": "importada",
+  "archivo": "C:\\Proyectos\\minutas-video\\docs\\ejemplo\\reunion-demo.vtt",
+  "duracion": 340.0,
+  "generado": "2026-11-09T15:08:11",
+  "hablantes": [
+   "Ana Torres",
+   "Luis Méndez",
+   "Sofía Ramírez"
+  ],
+  "segmentos": 25
+ },
+ "segmentos": [
+  {
+   "inicio": 3.0,
+   "fin": 9.0,
+   "texto": "Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 9.0,
+   "fin": 18.0,
+   "texto": "Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 19.0,
+   "fin": 27.0,
+   "texto": "Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 28.0,
+   "fin": 36.0,
+   "texto": "Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.",
+   "hablante": "Sofía Ramírez"
+  },
+  {
+   "inicio": 38.0,
+   "fin": 46.0,
+   "texto": "Bien. Empecemos con las métricas, que son buenas noticias.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 58.0,
+   "fin": 70.0,
+   "texto": "En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 70.0,
+   "fin": 82.0,
+   "texto": "¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 82.0,
+   "fin": 96.0,
+   "texto": "Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 96.0,
+   "fin": 110.0,
+   "texto": "Propongo medirlo antes de cambiar nada, para no adivinar.",
+   "hablante": "Sofía Ramírez"
+  },
+  {
+   "inicio": 110.0,
+   "fin": 120.0,
+   "texto": "De acuerdo, lo anoto como pendiente mío.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 128.0,
+   "fin": 142.0,
+   "texto": "Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación.",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 142.0,
+   "fin": 156.0,
+   "texto": "Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 156.0,
+   "fin": 162.0,
+   "texto": "¿Qué propones?",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 162.0,
+   "fin": 180.0,
+   "texto": "Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 180.0,
+   "fin": 190.0,
+   "texto": "Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 205.0,
+   "fin": 220.0,
+   "texto": "Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve.",
+   "hablante": "Sofía Ramírez"
+  },
+  {
+   "inicio": 220.0,
+   "fin": 235.0,
+   "texto": "Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.",
+   "hablante": "Sofía Ramírez"
+  },
+  {
+   "inicio": 235.0,
+   "fin": 248.0,
+   "texto": "Por mí bien; es solo de la interfaz, no toca la API.",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 248.0,
+   "fin": 260.0,
+   "texto": "Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 260.0,
+   "fin": 268.0,
+   "texto": "Sí, para el viernes.",
+   "hablante": "Sofía Ramírez"
+  },
+  {
+   "inicio": 285.0,
+   "fin": 300.0,
+   "texto": "Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 300.0,
+   "fin": 306.0,
+   "texto": "¿Y si no está listo?",
+   "hablante": "Luis Méndez"
+  },
+  {
+   "inicio": 306.0,
+   "fin": 320.0,
+   "texto": "Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.",
+   "hablante": "Ana Torres"
+  },
+  {
+   "inicio": 320.0,
+   "fin": 330.0,
+   "texto": "Entonces revisamos el estado el diecinueve, ¿les parece?",
+   "hablante": "Sofía Ramírez"
+  },
+  {
+   "inicio": 330.0,
+   "fin": 340.0,
+   "texto": "Perfecto. Revisión el diecinueve. Gracias a los dos.",
+   "hablante": "Ana Torres"
+  }
+ ]
+}
