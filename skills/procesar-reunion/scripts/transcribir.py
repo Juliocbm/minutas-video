@@ -27,7 +27,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from comun import configurar_consola, escribir_transcripcion, hms
+from comun import Progreso, configurar_consola, escribir_transcripcion, hms
+from entorno import modelos_descargados
 
 
 def registrar_dlls_cuda():
@@ -109,15 +110,21 @@ def main():
     if pista >= len(pistas):
         raise SystemExit(f"La pista {pista} no existe; hay {len(pistas)} (0 a {len(pistas) - 1}).")
 
+    prog = Progreso("transcripcion")
     registrar_dlls_cuda()
     t0 = time.time()
+    descarga = "" if a.modelo in modelos_descargados() else " (la primera vez se descarga)"
+    prog.fase(f"cargando el modelo {a.modelo}{descarga}")
     modelo, dispositivo = cargar_modelo(a.modelo, a.dispositivo)
     print(f"modelo {a.modelo} en {dispositivo}, cargado en {time.time() - t0:.0f}s", flush=True)
 
     t1 = time.time()
+    prog.fase("decodificando el audio")
     audio = decodificar_audio(archivo, pista)
     duracion = len(audio) / 16000
+    prog.total = duracion
     print(f"audio decodificado: {hms(duracion)} en {time.time() - t1:.0f}s", flush=True)
+    prog.fase(f"transcribiendo en {dispositivo}")
 
     segs, info = modelo.transcribe(
         audio,
@@ -128,12 +135,10 @@ def main():
         condition_on_previous_text=False,
     )
 
-    segmentos, ultimo_aviso, t2 = [], 0.0, time.time()
+    segmentos, t2 = [], time.time()
     for s in segs:
         segmentos.append({"inicio": round(s.start, 2), "fin": round(s.end, 2), "texto": s.text.strip(), "hablante": None})
-        if s.end - ultimo_aviso >= 300:
-            ultimo_aviso = s.end
-            print(f"  {hms(s.end)} / {hms(duracion)}  ({time.time() - t2:.0f}s)", flush=True)
+        prog.avance(s.end, segmentos=len(segmentos))
 
     meta = {
         "fuente": "whisper",

@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: minuta-desde-vtt
+expected_outcome: |
+  Se activa procesar-reunion, procesa reunion-demo.vtt con minutas.py (importación, sin Whisper) y
+  escribe reunion-demo_minuta/minuta.md con la plantilla completa: el lanzamiento el 27 de noviembre
+  condicionado al reintento de SMS, pendientes con responsable y minutos en cada acuerdo.
+context:
+  scaffold_script: place-files.sh

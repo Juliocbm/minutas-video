@@ -8,7 +8,7 @@ Sin capturas (audio o modo ninguna) genera la transcripción sola, con hablantes
 Uso: uv run armar_html.py <salida> [--titulo "..."] [--nota "..."] [--incrustar]
   --incrustar  mete las imágenes dentro del HTML (un solo archivo portátil, más pesado).
                Sin esta opción, el HTML necesita la carpeta capturas/ al lado.
-Lee transcripcion.json y capturas.json de <salida>; escribe transcripcion-ilustrada.html.
+Lee transcripcion.json, capturas.json y glosario.json de <salida>; escribe transcripcion-ilustrada.html.
 """
 import argparse
 import base64
@@ -16,7 +16,7 @@ import bisect
 import html
 from pathlib import Path
 
-from comun import agrupar, configurar_consola, hms, leer_capturas, leer_transcripcion
+from comun import agrupar, configurar_consola, hms, leer_capturas, leer_json, leer_transcripcion
 
 COLORES = ["#2f5fd0", "#b0452a", "#1f8a5b", "#8a3fb5", "#b8860b", "#0f7c8c", "#c2377a", "#5b6b2f"]
 COLORES_OSCURO = ["#8fb0ff", "#ff9a7a", "#6fd3a3", "#d0a0ff", "#f0c35a", "#6fd0de", "#ff8fc3", "#b8c97a"]
@@ -107,8 +107,11 @@ def main():
         f"<title>{e(titulo)}</title>\n<style>{estilo}</style>\n</head>\n<body>",
         f"<header><h1>{e(titulo)}</h1><p class=\"meta\">{e(' · '.join(detalles))}</p>",
     ]
-    if a.nota:
-        partes.append(f'<p class="nota">{e(a.nota)}</p>')
+    # La nota del glosario (glosario.json, si lo generó minutas.py) va sola: no hay que repetirla en --nota.
+    nota_glosario = (leer_json(salida / "glosario.json", {}) or {}).get("nota", "")
+    for nota in (a.nota, nota_glosario):
+        if nota:
+            partes.append(f'<p class="nota">{e(nota)}</p>')
     partes.append("</header>")
 
     if not capturas:

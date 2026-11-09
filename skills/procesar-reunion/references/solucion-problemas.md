@@ -14,6 +14,20 @@ Al reiniciar el editor ya aparece en el PATH.
 
 **La primera ejecución tarda mucho.** uv descarga Python si hace falta y las dependencias de cada script. Las librerías CUDA pesan alrededor de 1.5 GB. Se guardan en caché y no se repiten.
 
+## El proceso (`minutas.py`)
+
+**Se interrumpió o falló a la mitad.** Vuelve a correr el mismo comando: lo que terminó con los mismos parámetros no se repite. `reunion.json` dice qué pasos están completos y `_registro/<paso>.log` trae el error completo.
+
+**Quiero rehacer un paso aunque esté al día.** `--forzar transcripcion` (o `capturas`, `glosario`, `html`, `todo`). Lo que depende de ese paso se rehace solo.
+
+**Quiero cambiar solo la nota o el título del HTML.** `--solo html --nota "…"`. La nota y el título se recuerdan en las siguientes corridas de esa reunión.
+
+**Usé el .vtt de la plataforma y ahora quiero Whisper.** `--transcripcion whisper`. Las opciones que pasas por la línea de comandos se recuerdan para esa reunión; así se olvida el archivo importado.
+
+**"Corrige la configuración antes de procesar".** Un archivo de `.minutas-video/` tiene un error. El mensaje dice cuál y qué clave; `minutas.py config` muestra todo.
+
+**No veo el avance.** Cuando lo lanza Claude, la salida no es una terminal y solo hay hitos (25, 50 y 75 %). Para ver barras en vivo, corre en tu terminal `minutas.py seguir "<salida>"`.
+
 ## Transcripción
 
 **`Could not locate cudnn_ops64_9.dll`, `cublas64_12.dll` o errores de CUDA al empezar.**
@@ -31,7 +45,7 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 
 **"hay varias pistas de audio".** Es típico de OBS: una pista para el micrófono y otra para el escritorio. Prueba unos minutos con cada `--pista N` para ver cuál trae la conversación completa.
 
-**Siglas o nombres propios mal escritos.** Es normal. Corrígelos en la minuta con ayuda de `.minutas-video/vocabulario.txt` y anótalos en la nota del HTML. No los pases a Whisper como `hotwords` o `initial_prompt`: en pruebas, eso hizo que repitiera la lista, inventara frases en otros idiomas y perdiera la mitad del contenido.
+**Siglas o nombres propios mal escritos.** Es normal. Anótalos con sus variantes en `.minutas-video/glosario.toml`: `minutas.py` las encuentra, guarda dónde aparecen en `glosario.json` y pone la nota de corrección en el HTML. No los pases a Whisper como `hotwords` o `initial_prompt`: en pruebas, eso hizo que repitiera la lista, inventara frases en otros idiomas y perdiera la mitad del contenido.
 
 **Texto repetido o inventado en los silencios.** Ya se usa un filtro de voz (VAD). Si persiste, el audio probablemente tiene ruido de fondo o música. Revisa ese tramo en el video antes de citarlo.
 

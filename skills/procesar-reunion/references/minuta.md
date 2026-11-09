@@ -1,4 +1,6 @@
-# Plantilla de minuta
+# Plantillas de minuta
+
+Hay dos: la **completa** (presets `estandar`, `completo` y `audio`) y la **corta** (preset `rapido`), al final.
 
 Guía para quien redacta (no se copia a la minuta):
 - **Breve y verificable:** cada acuerdo o dato lleva su minuto y, si existe, su captura.
@@ -53,4 +55,24 @@ Guía para quien redacta (no se copia a la minuta):
 ---
 
 *Términos que la transcripción automática escribe mal: «X» es Y, «Z» es W.*
+```
+
+## Minuta corta
+
+Para el preset `rapido`: quien la pidió quiere lo esencial en menos de una pantalla. Mismas reglas de evidencia (minuto en cada acuerdo, lo inferido marcado), sin temas tratados ni diferencias con documentos.
+
+```markdown
+# Minuta · <tema de la reunión>
+
+**Fecha:** <fecha> (<plataforma o lugar>). **Participantes:** <nombres, si se saben>.
+
+**En resumen:** <tres a cinco líneas: para qué se reunieron y qué salió>.
+
+## Acuerdos
+- <acuerdo, con valores exactos> (mm:ss)
+
+## Pendientes
+- <acción concreta> · <responsable> · <fecha, si se dijo>
+
+*Transcripción automática; términos corregidos: «X» es Y.*
 ```

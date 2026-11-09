@@ -24,14 +24,13 @@ Un archivo de solo audio produce una lista vacía.
 Genera <salida>/capturas/NNNN_HH-MM-SS.jpg y <salida>/capturas.json.
 """
 import argparse
-import json
 import time
 from pathlib import Path
 
 import av
 import numpy as np
 
-from comun import configurar_consola, hms
+from comun import Progreso, configurar_consola, escribir_json, hms
 
 ANCHO, ALTO = 192, 108
 MODOS = {
@@ -66,8 +65,7 @@ def main():
     capturas = []
 
     def guardar_json():
-        (salida / "capturas.json").write_text(
-            json.dumps({"meta": meta, "capturas": capturas}, ensure_ascii=False, indent=1), encoding="utf-8")
+        escribir_json(salida / "capturas.json", {"meta": meta, "capturas": capturas})
 
     if a.modo == "ninguna":
         guardar_json()
@@ -92,11 +90,13 @@ def main():
         s.thread_type = "AUTO"
         duracion = c.duration / 1_000_000 if c.duration else 0
         meta["duracion"] = round(duracion, 1)
+        prog = Progreso("capturas", duracion)
+        prog.fase("buscando cambios de pantalla")
 
         ultima = anterior = None
         cambio_desde = None
         t_ultima = t_forzada = -1e9
-        siguiente, siguiente_aviso = 0.0, 300.0
+        siguiente = 0.0
 
         for frame in c.decode(s):
             t = frame.time
@@ -141,10 +141,7 @@ def main():
                     t_forzada = t
                 ultima, cambio_desde = m, None
             anterior = m
-
-            if t >= siguiente_aviso:
-                siguiente_aviso += 300
-                print(f"  {hms(t)} / {hms(duracion)}  capturas={len(capturas)}  ({time.time() - t0:.0f}s)", flush=True)
+            prog.avance(t, capturas=len(capturas))
 
     guardar_json()
     forzadas = sum(1 for x in capturas if x["motivo"] == "forzada")

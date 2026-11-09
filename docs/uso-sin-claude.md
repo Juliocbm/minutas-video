@@ -1,42 +1,55 @@
 # Usar los scripts sin Claude
 
-Las piezas mecánicas funcionan solas desde la terminal: transcripción, capturas y HTML. Solo necesitas [uv](https://docs.astral.sh/uv/getting-started/installation/). Lo que no obtienes sin Claude es la minuta, porque esa es la parte de análisis.
+Las piezas mecánicas funcionan solas desde la terminal: transcripción, capturas, glosario y transcripción ilustrada. Solo necesitas [uv](https://docs.astral.sh/uv/getting-started/installation/). Lo que no obtienes sin Claude es la minuta, porque esa es la parte de análisis.
+
+## Todo en un comando
 
 ```bash
 cd skills/procesar-reunion/scripts
 
-# 1. ¿GPU? ¿Qué modelo? (no instala nada)
-uv run --script entorno.py
+uv run --script minutas.py procesar "reunion.mkv"
+```
 
-# 2a. Transcribir con GPU NVIDIA (Windows/Linux)
+- Detecta la GPU y elige el modelo; transcribe y extrae capturas en paralelo, con barras de progreso; arma la transcripción ilustrada.
+- La salida queda en `reunion_minuta/`, junto a la grabación (`--salida` para otra carpeta).
+- Si se interrumpe o cambias una opción, vuelve a correr el mismo comando: solo se rehace lo necesario.
+- Acepta varias grabaciones o una carpeta, y las procesa una tras otra. Útil para dejar un lote corriendo y pedirle después a Claude solo las minutas.
+
+Opciones frecuentes:
+
+| Opción | Para qué |
+|---|---|
+| `--preset rapido` | `rapido`, `estandar`, `completo` o `audio` (ver [configuración](../skills/procesar-reunion/references/configuracion.md)) |
+| `--transcripcion "reunion.vtt"` | Importar la transcripción de Teams o Zoom (con nombres) en lugar de Whisper |
+| `--idioma auto` | Detectar el idioma (por defecto `es`) |
+| `--modelo medium` | Otro modelo de Whisper (`large-v3`, `large-v3-turbo`, `medium`, `small`…) |
+| `--pista 1` | Elegir la pista de audio, si la grabación tiene varias |
+| `--capturas ninguna` | `pantalla`, `camara` o `ninguna` |
+| `--nota "…"` · `--titulo "…"` · `--incrustar` | Para la transcripción ilustrada |
+| `--solo html` · `--forzar transcripcion` | Correr solo algunos pasos, o rehacer uno aunque esté al día |
+| `--plan` | Ver en JSON qué haría y con qué configuración, sin correr nada |
+
+Otros comandos:
+
+```bash
+uv run --script minutas.py seguir "reunion_minuta"   # barra de progreso de un proceso en curso
+uv run --script minutas.py config                     # configuración efectiva y de dónde sale cada valor
+uv run --script minutas.py glosario "reunion_minuta"  # vuelve a buscar los términos del glosario
+```
+
+## Paso a paso
+
+Cada paso también es un script que se puede correr solo:
+
+```bash
+uv run --script entorno.py                                                     # ¿GPU? ¿qué modelo? (no instala nada)
 uv run --with nvidia-cublas-cu12 --with "nvidia-cudnn-cu12>=9,<10" --script transcribir.py "reunion.mkv" --salida "reunion_minuta"
-
-# 2b. … o en CPU
-uv run --script transcribir.py "reunion.mkv" --salida "reunion_minuta" --modelo medium --dispositivo cpu
-
-# 2c. … o importar una transcripción con nombres (Teams/Zoom)
+uv run --script transcribir.py "reunion.mkv" --salida "reunion_minuta" --modelo medium --dispositivo cpu   # sin GPU
 uv run --script importar_transcripcion.py "reunion.vtt" --salida "reunion_minuta"
-
-# 3. Capturas (solo con video)
 uv run --script extraer_capturas.py "reunion.mkv" --salida "reunion_minuta" --modo pantalla
-
-# 4. Transcripción ilustrada
 uv run --script armar_html.py "reunion_minuta" --titulo "Revisión semanal"
+uv run --script hojas_contacto.py capturas "reunion_minuta"                    # hojas de 12 miniaturas
+uv run --script hojas_contacto.py tiempos "reunion.mkv" --destino "reunion_minuta/_revision" 120 340
 ```
 
 Cada script tiene `--help` con todas sus opciones. La primera ejecución tarda más porque uv descarga Python y las dependencias, y Whisper descarga el modelo. Luego todo queda en caché.
-
-## Opciones útiles
-
-| Script | Opción | Para qué |
-|---|---|---|
-| `transcribir.py` | `--idioma auto` | Detectar el idioma (por defecto `es`) |
-| | `--pista N` | Elegir la pista de audio, si la grabación tiene varias |
-| | `--modelo small` | Más rápido y menos preciso (`tiny`, `base`, `small`, `medium`, `large-v3`) |
-| `extraer_capturas.py` | `--modo camara` | Juntas presenciales: solo cambios grandes (experimental) |
-| | `--umbral-cambio 0.08` | Menos capturas, si salen demasiadas |
-| | `--max 100` | Tope de capturas |
-| `armar_html.py` | `--incrustar` | Un solo archivo con las imágenes adentro |
-| | `--nota "…"` | Aviso destacado al inicio (por ejemplo, términos mal transcritos) |
-| `hojas_contacto.py` | `capturas <salida>` | Hojas de 12 miniaturas para revisar todo de un vistazo |
-| | `tiempos <video> --destino <dir> 120 340` | Cuadros del video en segundos puntuales |

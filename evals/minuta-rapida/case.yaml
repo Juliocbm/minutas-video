@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: minuta-rapida
+expected_outcome: |
+  Se activa procesar-reunion con el preset rapido (sin preguntar, porque el usuario ya dijo "rápido")
+  y entrega reunion-demo_minuta/minuta.md con la plantilla corta: resumen, acuerdos y pendientes,
+  sin la sección de temas tratados.
+context:
+  scaffold_script: place-files.sh

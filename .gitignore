@@ -2,6 +2,11 @@
 __pycache__/
 *.pyc
 .venv/
+.pytest_cache/
+uv.lock
+
+# Resultados de claude plugin eval
+evals/results/
 
 # Salidas y grabaciones: contienen el contenido de reuniones, nunca se suben
 *_minuta/
@@ -16,9 +21,10 @@ _revision/
 *.wav
 *.vtt
 *.srt
-# … salvo el ejemplo ficticio, que sí se publica
+# … salvo el ejemplo ficticio, que sí se publica (también como entrada de las evaluaciones)
 !docs/ejemplo/*.vtt
 !docs/ejemplo/*.srt
+!evals/*/files/*.vtt
 
 # Espacios de trabajo de evaluación
 *-workspace/

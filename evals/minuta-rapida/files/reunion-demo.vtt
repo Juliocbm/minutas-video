@@ -1,0 +1,101 @@
+WEBVTT
+
+1
+00:00:03.000 --> 00:00:09.000
+<v Ana Torres>Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista.</v>
+
+2
+00:00:09.000 --> 00:00:18.000
+<v Ana Torres>Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.</v>
+
+3
+00:00:19.000 --> 00:00:27.000
+<v Luis Méndez>Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.</v>
+
+4
+00:00:28.000 --> 00:00:36.000
+<v Sofía Ramírez>Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.</v>
+
+5
+00:00:38.000 --> 00:00:46.000
+<v Ana Torres>Bien. Empecemos con las métricas, que son buenas noticias.</v>
+
+6
+00:00:58.000 --> 00:01:10.000
+<v Ana Torres>En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.</v>
+
+7
+00:01:10.000 --> 00:01:22.000
+<v Luis Méndez>¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.</v>
+
+8
+00:01:22.000 --> 00:01:36.000
+<v Ana Torres>Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.</v>
+
+9
+00:01:36.000 --> 00:01:50.000
+<v Sofía Ramírez>Propongo medirlo antes de cambiar nada, para no adivinar.</v>
+
+10
+00:01:50.000 --> 00:02:00.000
+<v Ana Torres>De acuerdo, lo anoto como pendiente mío.</v>
+
+11
+00:02:08.000 --> 00:02:22.000
+<v Luis Méndez>Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación.</v>
+
+12
+00:02:22.000 --> 00:02:36.000
+<v Luis Méndez>Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.</v>
+
+13
+00:02:36.000 --> 00:02:42.000
+<v Ana Torres>¿Qué propones?</v>
+
+14
+00:02:42.000 --> 00:03:00.000
+<v Luis Méndez>Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.</v>
+
+15
+00:03:00.000 --> 00:03:10.000
+<v Ana Torres>Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.</v>
+
+16
+00:03:25.000 --> 00:03:40.000
+<v Sofía Ramírez>Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve.</v>
+
+17
+00:03:40.000 --> 00:03:55.000
+<v Sofía Ramírez>Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.</v>
+
+18
+00:03:55.000 --> 00:04:08.000
+<v Luis Méndez>Por mí bien; es solo de la interfaz, no toca la API.</v>
+
+19
+00:04:08.000 --> 00:04:20.000
+<v Ana Torres>Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?</v>
+
+20
+00:04:20.000 --> 00:04:28.000
+<v Sofía Ramírez>Sí, para el viernes.</v>
+
+21
+00:04:45.000 --> 00:05:00.000
+<v Ana Torres>Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.</v>
+
+22
+00:05:00.000 --> 00:05:06.000
+<v Luis Méndez>¿Y si no está listo?</v>
+
+23
+00:05:06.000 --> 00:05:20.000
+<v Ana Torres>Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.</v>
+
+24
+00:05:20.000 --> 00:05:30.000
+<v Sofía Ramírez>Entonces revisamos el estado el diecinueve, ¿les parece?</v>
+
+25
+00:05:30.000 --> 00:05:40.000
+<v Ana Torres>Perfecto. Revisión el diecinueve. Gracias a los dos.</v>
