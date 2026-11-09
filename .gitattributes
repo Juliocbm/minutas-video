@@ -1,0 +1,2 @@
+# Los scripts de Bash deben quedar con LF también en Windows (los usa claude plugin eval)
+*.sh text eol=lf
