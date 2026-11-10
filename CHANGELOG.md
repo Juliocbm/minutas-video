@@ -6,21 +6,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
-## [0.4.0] - 2026-11-10
+## [0.5.0] - 2026-11-10
 
-Quién dijo qué: separación automática de hablantes, sin cuentas.
+De vuelta a lo que funciona. Se comparó la minuta de la 0.4 (sin publicar) contra la de la 0.1 con dos reuniones reales, en sesiones limpias y con calificación a ciegas contra una lista de hechos: la exactitud quedó empatada (una reunión la ganó cada versión), la 0.4 tardaba de 8 a 13 minutos más y, al apoyarse en el texto del OCR, Claude dejó de mirar las pantallas. La 0.5 recupera el flujo de la 0.1 y conserva lo que no cuesta tiempo ni tokens.
 
 ### Añadido
-- Separación de hablantes cuando transcribe Whisper (`separar_hablantes.py`), con sherpa-onnx en CPU: el modelo de segmentación de pyannote 3.0 y el modelo de voces TitaNet small, descargados de GitHub la primera vez, sin cuentas ni tokens. Corre en paralelo con la transcripción, unas 9 veces más rápido que la duración del audio.
-  - Cada frase recibe el hablante con el que más se traslapa, y `transcripcion.txt`, `.srt` y la transcripción ilustrada (con su filtro por hablante) salen con «Hablante 1», «Hablante 2»…
-  - Los "hablantes" de menos de 15 s (o del 2 % del habla) se reasignan al turno vecino: casi siempre son pedazos de otra persona.
-  - `minutas.py nombres <salida> "Hablante 1=Ana Torres"` les pone nombre cuando hay evidencia; la skill lo hace al identificar a los participantes.
-  - `--hablantes N` y `--no-separar-hablantes`, y `[hablantes]` en `config.toml`. El preset `rapido` no separa.
-- `dev/medir_hablantes.py`: mide la separación contra el corpus AMI con el protocolo que publica pyannote. Resultado: 23.1 % de error en cuatro reuniones (6.8 % de confusión entre personas), contra 17.0 % que publica pyannote community-1.
-- Prueba con 90 segundos reales de una reunión de AMI (CC BY 4.0, en `tests/datos/`).
+- Separación de hablantes, opcional (`--separar-hablantes` o `[hablantes] separar = true`): sherpa-onnx en CPU con el modelo de segmentación de pyannote 3.0 y TitaNet small, descargados de GitHub la primera vez, sin cuentas ni tokens. La transcripción sale con «Hablante 1», «Hablante 2»…, y `minutas.py nombres <salida> "Hablante 1=Ana Torres"` les pone nombre cuando hay evidencia. Medido con el corpus AMI: 23.1 % de error (6.8 % de confusión entre personas), contra 17.0 % que publica pyannote community-1 (requiere cuenta de Hugging Face). Unos 5 minutos más por reunión de 35.
+- `dev/medir_hablantes.py`, que mide la separación contra AMI con el protocolo de pyannote, y una prueba con 90 segundos reales de AMI (CC BY 4.0, en `tests/datos/`).
 
 ### Cambiado
-- La skill identifica a los participantes sobre los hablantes separados y dice de dónde salieron los nombres.
+- Claude vuelve a revisar las pantallas como en la 0.1: mira las hojas de miniaturas y abre las capturas que importan. Las hojas omiten las pantallas repetidas.
+- Claude escribe `minuta.md` directamente, con las plantillas completa y corta. Cada minuto enlaza a la frase de la transcripción ilustrada.
+- `minutas.py exportar` sale de `minuta.md`: el PDF y el Word quitan los enlaces, y `pendientes.csv` es la tabla de la sección «Pendientes».
+- El OCR de las capturas viene apagado (`--ocr` para prenderlo). Si se usa, `capturas.txt` sirve para copiar valores exactos, no para dejar de mirar las imágenes.
+- La minuta verificada (`minuta.json` + `minutas.py minuta`) queda como opción: no redujo errores y costaba de 0.15 a 0.73 USD más por reunión. Su formato pasó a `docs/minuta-verificada.md`.
+- Los pasos pesados (transcripción, hablantes y OCR) corren de uno en uno; las capturas siguen junto a la transcripción. A la vez, cada uno tardaba de 5 a 7 veces más.
+- La skill ya no sigue el avance con Monitor: cada hito despertaba la sesión y gastaba tokens (14 turnos de espera en una reunión de 35 minutos, unos 0.47 USD). Espera la notificación de que terminó; `minutas.py seguir` sigue mostrando la barra.
 
 ## [0.3.1] - 2026-11-09
 
@@ -113,8 +114,8 @@ Cimientos: un proceso que se reanuda, configuración por proyecto, avance visibl
 ### Notas
 - No se le pasa vocabulario a Whisper. En pruebas, `hotwords` hizo que repitiera la lista de términos, inventara frases en otros idiomas y perdiera la mitad del contenido. El vocabulario del proyecto se usa para corregir términos en la minuta.
 
-[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.4.0...HEAD
-[0.4.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.1...minutas-video--v0.4.0
+[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.5.0...HEAD
+[0.5.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.1...minutas-video--v0.5.0
 [0.3.1]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.0...minutas-video--v0.3.1
 [0.3.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.2.0...minutas-video--v0.3.0
 [0.2.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.1.0...minutas-video--v0.2.0

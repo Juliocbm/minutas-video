@@ -29,18 +29,18 @@ PRESETS = {
     },
     "estandar": {
         "descripcion": "Minuta completa y transcripción ilustrada con capturas de pantalla.",
-        "modelo": "", "capturas": "pantalla", "hablantes": True, "minuta": "completa", "revision": "normal",
+        "modelo": "", "capturas": "pantalla", "hablantes": False, "minuta": "completa", "revision": "normal",
         "entregables": ["minuta", "html"],
     },
     "completo": {
         "descripcion": "Como estándar, más revisión de todas las capturas, contraste con documentos "
                        "y contexto para otra sesión de Claude.",
-        "modelo": "", "capturas": "pantalla", "hablantes": True, "minuta": "completa", "revision": "exhaustiva",
+        "modelo": "", "capturas": "pantalla", "hablantes": False, "minuta": "completa", "revision": "exhaustiva",
         "entregables": ["minuta", "html", "contexto"],
     },
     "audio": {
         "descripcion": "Grabaciones sin video o cuando lo que se ve no importa: minuta completa, sin capturas.",
-        "modelo": "", "capturas": "ninguna", "hablantes": True, "minuta": "completa", "revision": "normal",
+        "modelo": "", "capturas": "ninguna", "hablantes": False, "minuta": "completa", "revision": "normal",
         "entregables": ["minuta", "html"],
     },
 }
@@ -49,8 +49,10 @@ DEFECTOS = {
     "preset": "estandar",
     "idioma": "es",
     "transcripcion": {"modelo": "", "dispositivo": "auto"},
-    "capturas": {"modo": "", "max": 200, "ocr": True},
-    # separar: None = lo decide el preset. numero: cuántas personas hablan (0 = no se sabe).
+    # El OCR y la separación de hablantes vienen apagados: medidos contra la 0.1 con reuniones reales, no mejoraron
+    # la minuta y sumaban unos 9 minutos (ver docs/arquitectura.md). Se prenden con --ocr y --separar-hablantes.
+    "capturas": {"modo": "", "max": 200, "ocr": False},
+    # separar: None = lo decide el preset (hoy ninguno separa). numero: cuántas personas hablan (0 = no se sabe).
     "hablantes": {"separar": None, "numero": 0},
 }
 

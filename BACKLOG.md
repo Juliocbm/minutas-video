@@ -2,14 +2,14 @@
 
 Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aquí y se anota en el [CHANGELOG](CHANGELOG.md).
 
-## 0.4.x · Quién dijo qué (seguimiento)
+**Regla:** todo cambio que toque la minuta se mide de punta a punta antes de publicarse: la misma reunión real, en una sesión limpia, con la versión publicada y la nueva, calificadas a ciegas contra una lista de hechos, más el tiempo y el costo de cada una. Medir piezas sueltas no basta: así entraron el OCR y la separación de hablantes, que no mejoraron la minuta (ver la 0.5.0 en el CHANGELOG).
 
-- **Hablantes palabra por palabra.** Hoy cada frase de Whisper va completa a un hablante; si Whisper juntó a dos personas en una frase («…¿no? Así es…»), la respuesta queda con quien preguntó. Con las marcas de tiempo por palabra de faster-whisper, cada palabra iría a su hablante y las frases se partirían en el cambio.
-- **pyannote como opción.** Solo si alguien lo pide y acepta la cuenta de Hugging Face: sherpa-onnx dio 23.1 % contra 17.0 % publicado por pyannote, y la diferencia es sobre todo habla encimada.
+## 0.5.x · Seguimiento
+
+- **Plantillas por tipo de reunión:** general, requisitos con proveedor, seguimiento, daily, retrospectiva, entrevista, capacitación. Cada proyecto puede agregar las suyas. En la daily medida, la minuta completa se alargó; una plantilla de daily (persona → ayer, hoy, bloqueos, indicaciones) podría ser más útil.
 - **Ajustes de calidad de Whisper.** `hallucination_silence_threshold` y tramos de baja confianza marcados en el HTML. Solo si las pruebas muestran mejora.
-- **Plantillas por tipo de reunión:** general, requisitos con proveedor, seguimiento, daily, retrospectiva, entrevista, capacitación. Cada proyecto puede agregar las suyas.
 
-## 0.5 · Especialistas
+## 0.6 · Especialistas
 
 - **Agentes:**
   - verificador de la minuta, con lectura independiente de cada acuerdo contra la transcripción;
@@ -20,7 +20,7 @@ Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aqu�
 - **Guías paso a paso** a partir de grabaciones de demostraciones.
 - **Entregables por audiencia:** resumen ejecutivo y correo de seguimiento.
 
-## 0.6 · Memoria
+## 0.7 · Memoria
 
 - **Biblioteca de reuniones** en SQLite FTS5, con una skill `consultar-reuniones` y un panel en HTML.
 - **Series:** seguimiento de pendientes entre reuniones de la misma serie.
@@ -35,14 +35,17 @@ Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aqu�
 Estos esperan una señal concreta para entrar.
 
 - **Calibrar el modo cámara** con grabaciones reales de juntas presenciales. Hoy sus umbrales son una estimación.
-- **Perfiles de voz por proyecto**, para sugerir nombres de hablantes en juntas recurrentes. Depende de la 0.4.
 - **Recortar la pantalla compartida** en videollamadas. Primero hay que medir cuántas capturas falsas generan las cámaras.
 - **Motores de transcripción alternos:** Canary, Parakeet o VibeVoice. Solo si superan a large-v3 en juntas propias.
 - **Más formatos de entrada:** el `.docx` que exporta Teams, el Google Doc de Meet y el TIMELINE de Zoom. Hoy ya se importa el `.vtt`; entran con un caso real.
-- **Calendario (.ics)** con los pendientes que tienen fecha y las reuniones de seguimiento. Requiere que `minuta.json` registre fechas completas (`2026-11-18`), no «18/11».
-- **Más exportaciones:** acuerdos en CSV, resumen ejecutivo o correo de seguimiento (ver 0.5).
-- **Barra en la status line.** Un comando de status line que lea `progreso.json`. Los hitos al 25, 50 y 75 % y `minutas.py seguir` ya cubren el avance.
-- **OCR en GPU** (onnxruntime-gpu con las librerías CUDA que ya usa Whisper). Hoy son unos 4 s por captura en CPU, en paralelo con la transcripción; entra si alarga de forma notable el proceso.
-- **Orden de lectura del OCR por columnas.** En pantallas con dos columnas (un correo junto a un PDF), las líneas se mezclan.
-- **Panel propio en Claude Code (mod).** Solo si la status line y los hitos se quedan cortos.
+- **Calendario (.ics)** con los pendientes que tienen fecha y las reuniones de seguimiento. Requiere fechas completas (`2026-11-18`), no «18/11».
+- **Más exportaciones:** acuerdos en CSV, resumen ejecutivo o correo de seguimiento (ver 0.6).
+- **Barra en la status line.** Un comando de status line que lea `progreso.json`. `minutas.py seguir` ya cubre el avance.
+- **Panel propio en Claude Code (mod).** Solo si la status line y `seguir` se quedan cortos.
 - **Transcripción en la nube.** Pospuesta: el audio saldría del equipo.
+- **Opcionales (`--separar-hablantes`, `--ocr`, minuta verificada):** solo si alguien los usa y una medición de punta a punta muestra que mejoran la minuta.
+  - Hablantes palabra por palabra, con las marcas de tiempo por palabra de faster-whisper (hoy cada frase va completa a un hablante).
+  - pyannote como opción, si alguien acepta la cuenta de Hugging Face (17.0 % publicado contra 23.1 % de sherpa-onnx).
+  - Perfiles de voz por proyecto, para sugerir nombres en juntas recurrentes.
+  - OCR en GPU (hoy unos 4-5 s por captura en CPU) y orden de lectura por columnas.
+  - Decidir si la minuta verificada se mejora (verificar también atribuciones) o se retira.

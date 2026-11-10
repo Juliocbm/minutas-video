@@ -1,6 +1,6 @@
 # Usar los scripts sin Claude
 
-Las piezas mecánicas funcionan solas desde la terminal: transcripción, capturas, texto de las capturas, glosario y transcripción ilustrada. Solo necesitas [uv](https://docs.astral.sh/uv/getting-started/installation/). Lo que no obtienes sin Claude es la redacción de la minuta, porque esa es la parte de análisis; si la escribes tú en `minuta.json`, el comando `minuta` la verifica y genera el Markdown.
+Las piezas mecánicas funcionan solas desde la terminal: transcripción, capturas, glosario y transcripción ilustrada (y, si los pides, hablantes y texto de las capturas). Solo necesitas [uv](https://docs.astral.sh/uv/getting-started/installation/). Lo que no obtienes sin Claude es la redacción de la minuta, porque esa es la parte de análisis; si la escribes tú en `minuta.json`, el comando `minuta` la verifica y genera el Markdown.
 
 ## Todo en un comando
 
@@ -10,7 +10,7 @@ cd skills/procesar-reunion/scripts
 uv run --script minutas.py procesar "reunion.mkv"
 ```
 
-- Detecta la GPU y elige el modelo; transcribe y extrae capturas en paralelo, con barras de progreso; lee el texto de las capturas; arma la transcripción ilustrada.
+- Detecta la GPU y elige el modelo; transcribe y extrae capturas en paralelo, con barras de progreso; si los pides, después separa a los hablantes y lee el texto de las capturas, uno a la vez; arma la transcripción ilustrada.
 - La salida queda en `reunion_minuta/`, junto a la grabación (`--salida` para otra carpeta).
 - Si se interrumpe o cambias una opción, vuelve a correr el mismo comando: solo se rehace lo necesario.
 - Acepta varias grabaciones o una carpeta, y las procesa una tras otra. Útil para dejar un lote corriendo y pedirle después a Claude solo las minutas.
@@ -25,8 +25,8 @@ Opciones frecuentes:
 | `--modelo medium` | Otro modelo de Whisper (`large-v3`, `large-v3-turbo`, `medium`, `small`…) |
 | `--pista 1` | Elegir la pista de audio, si la grabación tiene varias |
 | `--capturas ninguna` | `pantalla`, `camara` o `ninguna` |
-| `--no-ocr` | No leer el texto de las capturas (ahorra unos 4 s por captura) |
-| `--hablantes 4` · `--no-separar-hablantes` | Cuántas personas hablan, si se sabe (separa mejor); o no separar hablantes |
+| `--ocr` | Leer el texto de las capturas (unos 4 s por captura, en CPU) |
+| `--separar-hablantes` · `--hablantes 4` | Separar quién habla (unos 5 min por media hora de audio, en CPU); cuántas personas, si se sabe |
 | `--nota "…"` · `--titulo "…"` · `--incrustar` | Para la transcripción ilustrada |
 | `--solo html` · `--forzar transcripcion` | Correr solo algunos pasos, o rehacer uno aunque esté al día |
 | `--plan` | Ver en JSON qué haría y con qué configuración, sin correr nada |
@@ -38,7 +38,7 @@ uv run --script minutas.py seguir "reunion_minuta"   # barra de progreso de un p
 uv run --script minutas.py config                     # configuración efectiva y de dónde sale cada valor
 uv run --script minutas.py glosario "reunion_minuta"  # vuelve a buscar los términos del glosario
 uv run --script minutas.py nombres "reunion_minuta" "Hablante 1=Ana Torres"   # nombre para un hablante
-uv run --script minutas.py minuta "reunion_minuta"    # valida minuta.json, verifica las citas y genera minuta.md
+uv run --script minutas.py minuta "reunion_minuta"    # opcional: valida minuta.json, verifica las citas y genera minuta.md
 uv run --script minutas.py exportar "reunion_minuta"  # minuta.pdf, minuta.docx y pendientes.csv (o solo los que indiques)
 ```
 

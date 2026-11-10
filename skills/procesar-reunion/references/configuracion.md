@@ -32,10 +32,10 @@ dispositivo = "auto"         # auto | cuda | cpu
 [capturas]
 modo = ""                    # vacío: el del preset. pantalla | camara | ninguna
 max = 200                    # tope de capturas por grabación
-ocr = true                   # leer el texto de cada captura (unos 4 s por captura, en CPU)
+ocr = false                  # leer el texto de cada captura (unos 4 s por captura, en CPU)
 
 [hablantes]                  # separación automática, solo cuando transcribe Whisper
-separar = true               # sin fijar: lo decide el preset (rapido no separa)
+separar = false              # quién habla («Hablante 1»…), unos 5 min más por reunión
 numero = 0                   # cuántas personas suelen hablar; 0 = no se sabe
 ```
 
@@ -46,11 +46,11 @@ numero = 0                   # cuántas personas suelen hablar; 0 = no se sabe
 | Preset | Transcripción | Hablantes | Capturas | Minuta | Revisión de capturas | Entregables |
 |---|---|---|---|---|---|---|
 | `rapido` | large-v3-turbo | No | No | Corta | Ligera | Minuta |
-| `estandar` | Recomendado para el equipo | Sí | Pantalla | Completa | Normal | Minuta y transcripción ilustrada |
-| `completo` | Recomendado para el equipo | Sí | Pantalla | Completa | Exhaustiva, y contraste con documentos | Además, contexto para otra sesión |
-| `audio` | Recomendado para el equipo | Sí | No | Completa | — | Minuta y transcripción ilustrada |
+| `estandar` | Recomendado para el equipo | No | Pantalla | Completa | Normal | Minuta y transcripción ilustrada |
+| `completo` | Recomendado para el equipo | No | Pantalla | Completa | Exhaustiva, y contraste con documentos | Además, contexto para otra sesión |
+| `audio` | Recomendado para el equipo | No | No | Completa | — | Minuta y transcripción ilustrada |
 
-"Hablantes" es la separación automática de quién habla, que solo corre cuando transcribe Whisper: una transcripción importada de la plataforma ya trae los nombres.
+"Hablantes" es la separación automática de quién habla, que solo corre cuando transcribe Whisper: una transcripción importada de la plataforma ya trae los nombres. Ningún preset la prende, ni el OCR: medidos contra la 0.1 con reuniones reales, no mejoraron la minuta y sumaban unos 9 minutos. Se prenden con `--separar-hablantes` y `--ocr`, o en `config.toml`.
 
 ## `glosario.toml`
 

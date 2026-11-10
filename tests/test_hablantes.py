@@ -50,17 +50,18 @@ def test_comando_nombres(correr_script, tmp_path):
     assert r.returncode != 0 and "Hablante 1, Hablante 2" in r.stderr
 
 
-def test_plan_separa_hablantes_solo_con_whisper(correr_script, demo_vtt, tmp_path):
+def test_plan_separa_hablantes_solo_si_se_pide_y_con_whisper(correr_script, demo_vtt, tmp_path):
     video = tmp_path / "junta.mp4"
     video.write_bytes(b"")  # el plan no abre el video
 
     def acciones(*args):
         return json.loads(correr_script("minutas.py", "procesar", *args, "--plan").stdout)["entradas"][0]["acciones"]
 
-    assert "hablantes" in acciones(video.name)
-    assert "hablantes" not in acciones(video.name, "--no-separar-hablantes")
-    assert "hablantes" not in acciones(video.name, "--preset", "rapido")
-    assert "hablantes" not in acciones(video.name, "--transcripcion", demo_vtt.name)  # el .vtt ya trae quién habla
+    assert "hablantes" not in acciones(video.name)  # apagada por defecto
+    assert "hablantes" in acciones(video.name, "--separar-hablantes")
+    assert "hablantes" in acciones(video.name, "--preset", "rapido", "--separar-hablantes")
+    # El .vtt ya trae quién habla: aunque se pida, no se separa.
+    assert "hablantes" not in acciones(video.name, "--transcripcion", demo_vtt.name, "--separar-hablantes")
 
 
 def test_separa_las_voces_de_una_reunion_real(correr_script, tmp_path):

@@ -5,8 +5,8 @@
 """minutas-video: procesa grabaciones de punta a punta y lleva el registro de cada paso.
 
   minutas.py procesar <grabación|transcripción|carpeta> [...] [opciones]
-      Transcripción (Whisper o importada), separación de hablantes, capturas, texto de las capturas
-      (OCR), glosario y transcripción ilustrada. Lo que ya está hecho con los mismos parámetros no se repite: si algo
+      Transcripción (Whisper o importada), capturas, glosario y transcripción ilustrada; con --separar-hablantes
+      y --ocr, también quién habla y el texto de las capturas. Lo que ya está hecho con los mismos parámetros no se repite: si algo
       falla o cambias una opción, vuelve a correr el mismo comando y solo se rehace lo necesario.
   minutas.py procesar <grabación> --plan
       Muestra en JSON qué haría y con qué configuración, sin correr nada.
@@ -17,13 +17,13 @@
   minutas.py glosario <salida>
       Busca en la transcripción los términos del glosario y las menciones de participantes.
   minutas.py minuta <salida>
-      Valida minuta.json, verifica cada cita contra la transcripción y el texto de las capturas, y
-      genera minuta.md.
+      Opcional: valida minuta.json, verifica cada cita contra la transcripción y el texto de las capturas,
+      y genera minuta.md (formato en docs/minuta-verificada.md). La skill escribe minuta.md directamente.
   minutas.py nombres <salida> "Hablante 1=Ana Torres" ...
       Pone nombre a los hablantes de la separación automática (en el .txt, el .srt y, al volver a
       procesar, en la transcripción ilustrada).
   minutas.py exportar <salida> [pdf] [docx] [csv]
-      La minuta para compartir: minuta.pdf, minuta.docx y pendientes.csv (por defecto, los tres).
+      La minuta para compartir, desde minuta.md: minuta.pdf, minuta.docx y pendientes.csv (por defecto, los tres).
 
 En una terminal muestra barras de progreso. Cuando la salida no es una terminal (por ejemplo, la
 lanza Claude), imprime solo hitos: inicio y fin de cada paso, y avances del 25, 50 y 75 %.
@@ -65,7 +65,11 @@ DEPENDE = {"transcripcion": (), "hablantes": (), "capturas": (), "ocr": ("captur
            "html": ("transcripcion", "hablantes", "capturas", "ocr", "glosario")}
 # Subir la versión de un paso hace que se rehaga en las reuniones ya procesadas.
 VERSION_PASO = {"transcripcion": 1, "hablantes": 1, "capturas": 2, "ocr": 1, "glosario": 1, "html": 3}
-EXTERNOS = ("transcripcion", "hablantes", "capturas", "ocr")  # cada uno en su propio proceso, en paralelo
+EXTERNOS = ("transcripcion", "hablantes", "capturas", "ocr")  # cada uno en su propio proceso
+# Los pesados corren de uno en uno, en el orden de EXTERNOS; las capturas, junto a cualquiera. Los tres a la vez se
+# estorban (CPU y memoria): con una reunión real de 35 min cada uno tardó de 5 a 7 veces más (la transcripción, 24 min
+# en vez de 3.5).
+PESADOS = ("transcripcion", "hablantes", "ocr")
 OPCIONALES = ("ocr", "hablantes")  # si fallan, lo que depende de ellos se hace igual, sin su resultado
 HITOS = (25, 50, 75)
 # Opciones de la corrida que se recuerdan en reunion.json y se reaplican al reanudar esa reunión.
@@ -321,7 +325,7 @@ def resumen_config(cfg):
 
 class Pantalla:
     """Barras en una terminal; hitos en texto cuando no hay terminal. Siempre escribe progreso.json
-    y _registro/hitos.log (lo que Claude puede seguir con Monitor)."""
+    (lo lee `seguir`) y _registro/hitos.log (para revisar después qué pasó)."""
 
     def __init__(self, entrada, salida, tty):
         self.entrada, self.salida, self.tty = entrada, salida, tty
@@ -504,6 +508,13 @@ def resumen_de(paso, salida):
     return SALIDA_DE[paso]
 
 
+def puede_arrancar(paso, pendientes, en_curso):
+    """Un paso externo arranca cuando ya terminó lo que necesita y, si es pesado, cuando no corre otro pesado."""
+    if any(d in pendientes or d in en_curso for d in DEPENDE[paso]):
+        return False
+    return not (paso in PESADOS and any(q in PESADOS for q in en_curso))
+
+
 def correr_glosario(salida, parametros):
     _, segmentos = leer_transcripcion(salida)
     escribir_json(salida / "glosario.json", glosmod.buscar(segmentos, parametros["terminos"], parametros["personas"]))
@@ -585,11 +596,11 @@ def ejecutar(plan, uv, tty):
 
     procesos = {}
     try:
-        # Transcripción y capturas arrancan juntas; el OCR, en cuanto terminan las capturas.
+        # Transcripción y capturas arrancan juntas; después, hablantes y OCR, de uno en uno (ver PESADOS).
         pendientes = [p for p in EXTERNOS if p in correr]
         while pendientes or procesos:
             for paso in list(pendientes):
-                if any(d in pendientes or d in procesos for d in DEPENDE[paso]):
+                if not puede_arrancar(paso, pendientes, procesos):
                     continue
                 pendientes.remove(paso)
                 if bloqueado(paso):
@@ -732,9 +743,9 @@ def main():
     pp.add_argument("--max-capturas", type=int)
     pp.add_argument("--umbral-cambio", type=float)
     pp.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=None,
-                    help="leer el texto de las capturas (por defecto, sí)")
+                    help="leer el texto de las capturas con OCR (por defecto, no)")
     pp.add_argument("--separar-hablantes", action=argparse.BooleanOptionalAction, default=None,
-                    help="separar quién habla cuando transcribe Whisper (por defecto, según el preset)")
+                    help="separar quién habla cuando transcribe Whisper (por defecto, no)")
     pp.add_argument("--hablantes", type=int, help="cuántas personas hablan, si se sabe (mejora la separación)")
     pp.add_argument("--pista", type=int, help="pista de audio, si la grabación tiene varias")
     pp.add_argument("--transcripcion", help=".vtt/.srt de la plataforma en lugar de Whisper; 'whisper' para volver a Whisper")
@@ -757,14 +768,14 @@ def main():
     pg.add_argument("salida")
     pg.add_argument("--proyecto")
 
-    pm = sub.add_parser("minuta", help="valida minuta.json, verifica la evidencia y genera minuta.md")
+    pm = sub.add_parser("minuta", help="opcional: valida minuta.json, verifica la evidencia y genera minuta.md")
     pm.add_argument("salida")
 
     pn = sub.add_parser("nombres", help="pone nombre a los hablantes de la separación automática")
     pn.add_argument("salida")
     pn.add_argument("asignaciones", nargs="+", help='"Hablante 1=Ana Torres" …')
 
-    pe = sub.add_parser("exportar", help="exporta la minuta a PDF, Word y CSV de pendientes")
+    pe = sub.add_parser("exportar", help="exporta minuta.md a PDF, Word y CSV de pendientes")
     pe.add_argument("salida")
     pe.add_argument("formatos", nargs="*", help=f"{', '.join(expmod.FORMATOS)} (por defecto, todos)")
 

@@ -1,6 +1,6 @@
 ---
 name: procesar-reunion
-description: Convierte la grabación de una reunión, junta, videollamada o conversación (video o solo audio) en transcripción con tiempos, capturas de lo que se mostraba con su texto, transcripción ilustrada en HTML y una minuta con acuerdos y pendientes, cada uno con su cita verificada contra la grabación; opcionalmente, un resumen de contexto para otra sesión de Claude. Transcribe en local con Whisper (GPU opcional) y los requisitos se instalan solos con uv.
+description: Convierte la grabación de una reunión, junta, videollamada o conversación (video o solo audio) en transcripción con tiempos, capturas de lo que se mostraba, transcripción ilustrada en HTML y una minuta con acuerdos y pendientes, cada uno con su minuto; opcionalmente, un resumen de contexto para otra sesión de Claude. Transcribe en local con Whisper (GPU opcional) y los requisitos se instalan solos con uv.
 when_to_use: Úsala siempre que el usuario quiera transcribir o sacar el texto de un video o audio, saber qué se dijo o se acordó en una junta (grabada o con su transcripción exportada de Teams, Zoom o Meet), hacer la minuta o el resumen de una reunión, o comparta la ruta de una grabación (mp4, mkv, mov, webm, m4a, mp3, wav) o de una transcripción de reunión (.vtt, .srt), aunque no diga "minuta" ni "transcripción" y aunque pida algo rápido. Con la skill, cada acuerdo queda con su minuto y los archivos quedan guardados para verificar.
 argument-hint: "[grabación] [--preset rapido|estandar|completo|audio]"
 allowed-tools: Bash(uv run *) Bash(uv --version)
@@ -13,18 +13,16 @@ Convierte una grabación en archivos que se pueden leer, buscar y compartir. Tod
 | Archivo | Qué es | Lo genera |
 |---|---|---|
 | `transcripcion.txt` · `.srt` · `.json` | Texto con `[hh:mm:ss]` y hablante cuando se conoce | `minutas.py` |
-| `hablantes.json` | Quién habla en cada momento («Hablante 1», «Hablante 2»…), cuando transcribe Whisper | `minutas.py` |
 | `capturas/` + `capturas.json` | Una imagen cada vez que cambia lo que se ve; las que repiten una pantalla anterior quedan marcadas | `minutas.py` |
-| `capturas.txt` · `ocr.json` | Texto de cada captura (OCR). `capturas.txt` trae solo lo nuevo de cada una | `minutas.py` |
 | `glosario.json` | Dónde aparecen mal escritos los términos del glosario y quién es mencionado | `minutas.py` |
 | `transcripcion-ilustrada.html` | Cada captura junto a lo que se dijo mientras estuvo visible, con búsqueda y un reproductor: clic en una frase para escucharla | `minutas.py` |
 | `reunion.json` · `progreso.json` · `_registro/` | Registro de cada paso, avance y bitácoras | `minutas.py` |
-| `minuta.json` | Acuerdos, temas y pendientes, cada uno con su evidencia (minuto, cita y captura) | Tú |
-| `minuta.md` | La minuta para leer, con enlaces al momento exacto | `minutas.py minuta`, desde `minuta.json` |
+| `minuta.md` | Acuerdos, temas y pendientes, cada uno con su minuto enlazado a la transcripción ilustrada | Tú |
 | `minuta.pdf` · `minuta.docx` · `pendientes.csv` | La minuta para compartir y los pendientes para Excel o Jira | `minutas.py exportar`, si se pide |
 | `contexto-<tema>.md` | Paquete de contexto para otra sesión de Claude | Tú, si se pide |
+| `hablantes.json` · `capturas.txt` · `ocr.json` | Solo si se pidieron: quién habla (`--separar-hablantes`) y el texto de las capturas (`--ocr`) | `minutas.py` |
 
-`minutas.py` hace todo lo mecánico y recuerda lo que ya hizo: si algo falla o cambia una opción, el mismo comando solo rehace lo necesario. Tu trabajo es acordar lo mínimo, lanzar el proceso, informar el avance, revisar y redactar.
+`minutas.py` hace todo lo mecánico y recuerda lo que ya hizo: si algo falla o cambia una opción, el mismo comando solo rehace lo necesario. Tu trabajo es acordar lo mínimo, lanzar el proceso, esperar, revisar y redactar.
 
 Los scripts están en `${CLAUDE_SKILL_DIR}/scripts/`. Pon siempre entre comillas las rutas del usuario: los nombres de las grabaciones suelen tener espacios.
 
@@ -81,16 +79,17 @@ La primera vez que apliques esta skill en una conversación, menciona la privaci
 uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py procesar "<grabación>" [--preset <preset>] [--transcripcion "<archivo.vtt>"] [--idioma auto] [--pista N] [--salida "<carpeta>"]
 ```
 
-- Lánzalo **en segundo plano** y espera la notificación de que terminó. Transcribe, separa a los hablantes y extrae capturas en paralelo, y lee el texto de las capturas en cuanto terminan (unos 4 s por captura). La separación de hablantes corre en CPU, unas 9 veces más rápido que la duración del audio. Nunca lances dos procesos con transcripción a la vez, porque agotan la memoria.
+- Lánzalo **en segundo plano** y espera la notificación de que terminó. Transcribe y extrae las capturas a la vez. Nunca lances dos procesos con transcripción a la vez, porque agotan la memoria.
+- La separación de hablantes (`--separar-hablantes`) y el texto de las capturas (`--ocr`) vienen apagados: medidos con reuniones reales, no mejoraron la minuta y suman unos 9 minutos. Úsalos solo si el usuario los pide.
 - Con varias grabaciones, pásalas todas en un solo comando (o una carpeta): se procesan una tras otra.
-- **Avance:** si tienes la herramienta Monitor, sigue `<salida>/_registro/hitos.log` (por ejemplo `tail -n +1 -F "<salida>/_registro/hitos.log"`). Cuando llegue un hito (`▸` 25, 50 y 75 %, `✓` paso terminado, `✗` error), escribe una línea corta al usuario: "Transcripción al 50 %, faltan ~2 min". No comentes otras líneas.
-- Dile también que puede ver una barra de progreso en vivo en su propia terminal con `uv run --script "<ruta absoluta de minutas.py>" seguir "<salida>"`.
+- **No sigas el avance** (ni con Monitor ni leyendo `progreso.json` o las bitácoras): cada aviso despierta la sesión y gasta tokens sin cambiar nada. Espera solo la notificación de que terminó.
+- Dile al usuario que puede ver una barra de progreso en vivo en su propia terminal con `uv run --script "<ruta absoluta de minutas.py>" seguir "<salida>"`.
 - Mientras corre, si el usuario mencionó documentos relacionados, léelos ya: los necesitarás en el paso 6.
 - Al terminar, la última línea es `LISTO` o `TERMINÓ CON ERRORES`. Si hubo un error, lee `<salida>/_registro/<paso>.log` y `references/solucion-problemas.md`, corrige y vuelve a correr el mismo comando: lo que ya terminó no se repite.
 - Si el proceso tardó más de unos 5 minutos y tienes la herramienta PushNotification, manda un aviso corto: "Transcripción lista: <nombre>".
 - Si se espera que tarde mucho (CPU con una grabación larga), sugiere correr el mismo comando en su terminal, donde verá las barras, y avisarte al terminar.
 
-Como referencia, en una laptop con GPU NVIDIA, 35 minutos de video tardan unos 3 minutos en transcribirse, y las capturas se extraen en paralelo. La primera vez tarda más: uv descarga las dependencias (unos 1.5 GB más si hay GPU) y Whisper descarga el modelo (unos 3 GB para large-v3).
+Como referencia, en una laptop con GPU NVIDIA, 35 minutos de video tardan unos 5 minutos en procesarse, con las capturas en paralelo. La primera vez tarda más: uv descarga las dependencias (unos 1.5 GB más si hay GPU) y Whisper descarga el modelo (unos 3 GB para large-v3).
 
 ## 5. Revisar
 
@@ -99,10 +98,10 @@ Aquí está el valor: cruzar lo que se dijo con lo que se veía. Ajusta la profu
 1. **Lee `transcripcion.txt` completo.** Si es larga, léela por tramos y toma notas. Identifica temas, decisiones, dudas y términos mal escritos.
 2. **Lee `glosario.json`** si existe: qué variantes mal escritas aparecieron, con su minuto, y las menciones de cada participante. Úsalo para corregir términos y para saber quién estaba y con qué rol (`config.participantes`).
 3. **Capturas** (si hay):
-   - **Lee primero `capturas.txt`**: el texto de cada pantalla, solo lo nuevo respecto a la anterior. Te dice qué se mostró sin abrir imágenes, cuáles conviene abrir y los valores exactos para citar. El OCR puede confundir caracteres: confirma en la imagen los datos críticos (montos, folios, fechas). Si es muy largo, búscale los términos de la reunión en lugar de leerlo entero.
-   - `ligera`: abre imágenes solo si el texto se refiere a algo que se ve ("como ven aquí…").
+   - `ligera`: solo si el texto se refiere a algo que se ve ("como ven aquí…").
    - `normal`: genera las hojas de miniaturas con `uv run --script ${CLAUDE_SKILL_DIR}/scripts/hojas_contacto.py capturas "<salida>"` y míralas; abre a tamaño completo solo las que importan (tablas, documentos, código, errores, chats, nombres de participantes). Con 5 a 10 suele bastar. Las hojas omiten las capturas que repiten una pantalla anterior.
    - `exhaustiva`: todas las hojas, y a tamaño completo cada captura con texto o datos relevantes.
+   - Si existe `capturas.txt` (se pidió `--ocr`), úsalo para copiar valores exactos o buscar un término, **no en lugar de mirar las hojas**: el texto no dice quién habla en la videollamada, qué está resaltado ni cómo se organiza la pantalla.
 4. **Revisa lo que no quedó capturado.** Si el audio se refiere a algo sin captura, o hay un tramo largo sin capturas, mira cuadros puntuales:
    ```
    uv run --script ${CLAUDE_SKILL_DIR}/scripts/hojas_contacto.py tiempos "<grabación>" --destino "<salida>/_revision" <seg> <seg> ...
@@ -110,32 +109,20 @@ Aquí está el valor: cruzar lo que se dijo con lo que se veía. Ajusta la profu
    Un tramo largo sin capturas suele ser una pantalla que no cambió, no un fallo.
 5. **Identifica a los participantes:**
    - Con una transcripción importada, los nombres de los hablantes son confiables.
-   - Con Whisper, la separación automática dice quién habla, pero no su nombre: «Hablante 1», «Hablante 2»… Agrupa bien la mayor parte del tiempo, pero puede juntar dos voces parecidas o partir a una persona en dos; en las voces encimadas, la frase va a quien más habla.
-   - Deduce los nombres solo con evidencia: alguien se presenta, lo llaman por su nombre justo antes de que hable, aparece en el mosaico de la videollamada o en el chat. Cuando estés seguro, ponles nombre:
-     ```
-     uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py nombres "<salida>" "Hablante 1=Ana Torres" "Hablante 2=Luis Méndez"
-     ```
-     Actualiza `transcripcion.txt` y `.srt` al instante; la transcripción ilustrada, al volver a correr `minutas.py procesar` con la grabación (solo se rehace el HTML).
-   - No atribuyas una frase a alguien sin evidencia. Lo deducido va con `"inferido": true` en los participantes de la minuta.
+   - Con Whisper no hay hablantes. Deduce nombres solo con evidencia: se llaman por su nombre, aparecen en el mosaico de la videollamada o en el chat, o la videollamada resalta a quien habla.
+   - Si se pidió `--separar-hablantes`, la transcripción trae «Hablante 1», «Hablante 2»…: puede juntar dos voces parecidas o partir a una persona en dos. Ponles nombre solo con evidencia: `uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py nombres "<salida>" "Hablante 1=Ana Torres"`.
+   - No atribuyas una frase a alguien sin evidencia. Si lo infieres, dilo.
 
 ## 6. Minuta
 
-Lee `references/minuta.md` y escribe **`<salida>/minuta.json`**, no `minuta.md`. Usa `"plantilla": "completa"` o `"corta"` según `config.efectiva.minuta`. Al redactarla:
+Lee `references/minuta.md`. Usa la plantilla **completa** o la **corta** según `config.efectiva.minuta`. Al redactarla:
 
-- **Cada acuerdo, punto, pregunta, riesgo y pendiente lleva evidencia:** el momento (`t`, el `[hh:mm:ss]` del párrafo), una **cita textual** copiada de la transcripción (o de `capturas.txt`, si está en pantalla) y la captura, si se ve. Así cualquiera puede comprobarlo, y el comando lo verifica.
-- **Distingue** acuerdo, propuesta, duda abierta e intención (`tipo` de cada punto). Que alguien mencione una idea no la convierte en acuerdo.
-- **Corrige los términos mal transcritos** en el texto y anótalos en `terminos` (los del glosario se agregan solos).
-- **Contrasta con documentos relacionados.** Si el usuario mencionó análisis, planes o código relacionados con la reunión (o el preset es `completo`), revísalos y llena `diferencias` con rutas y líneas. Es de lo más valioso: una reunión suele cambiar decisiones que ya estaban escritas. Lo que no leíste lleva `"verificado": false`.
+- **Cada acuerdo o dato lleva su minuto**, enlazado a la frase de la transcripción ilustrada (`[05:30](transcripcion-ilustrada.html#t330)`: los segundos del `[hh:mm:ss]` del párrafo) y, si existe, el enlace a la captura (`capturas/0012_00-05-30.jpg`). Así quien la lea puede verificarlo.
+- **Distingue** acuerdo, propuesta, duda abierta e intención. Que alguien mencione una idea no la convierte en acuerdo.
+- **Corrige los términos mal transcritos** y lístalos al final, para que el lector entienda la transcripción original.
+- **Contrasta con documentos relacionados.** Si el usuario mencionó análisis, planes o código relacionados con la reunión (o el preset es `completo`), revísalos y agrega una sección "Diferencias con documentos" con rutas y líneas. Es de lo más valioso: una reunión suele cambiar decisiones que ya estaban escritas. Separa lo verificado de lo inferido.
 
-Después genera la minuta:
-
-```
-uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py minuta "<salida>"
-```
-
-Valida `minuta.json`, busca cada cita cerca de su momento (y en el texto de la captura citada) y escribe `minuta.md` con enlaces a la frase exacta de la transcripción ilustrada. Si reporta problemas (cita en otro minuto, cita que no es textual, captura que no corresponde), corrige `minuta.json` y vuélvelo a correr hasta que no queden. No edites `minuta.md` a mano: se regenera.
-
-Si hay algo que el lector del HTML deba saber además de lo que ya pone el glosario (que se agrega solo), regenera la transcripción ilustrada con una nota. Tarda un segundo:
+Guárdala como `<salida>/minuta.md`. Después, si hay algo que el lector del HTML deba saber además de lo que ya pone el glosario (que se agrega solo), regenera la transcripción ilustrada con una nota. Tarda un segundo:
 
 ```
 uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py procesar "<grabación>" --solo html --nota "<aviso para el lector>"
@@ -147,7 +134,7 @@ uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py procesar "<grabación>" -
 uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py exportar "<salida>" [pdf] [docx] [csv]
 ```
 
-Sin formatos genera los tres: `minuta.pdf` (lo imprime Edge o Chrome), `minuta.docx` y `pendientes.csv` (UTF-8 con BOM, abre bien en Excel). Salen de `minuta.json`, así que corre antes `minutas.py minuta` y corrige lo que reporte. Los documentos no enlazan a archivos locales: los minutos van como texto.
+Sin formatos genera los tres desde `minuta.md`: `minuta.pdf` (lo imprime Edge o Chrome), `minuta.docx` y `pendientes.csv` (la tabla de pendientes, en UTF-8 con BOM: abre bien en Excel). Los documentos no enlazan a archivos locales: los minutos van como texto.
 
 ## 7. Contexto para otra sesión (si `entregables` lo incluye o el usuario lo pide)
 
@@ -162,7 +149,7 @@ Guárdalo como `<salida>/contexto-<tema>.md` y, si lo pide, cópialo al portapap
 
 - Lista los archivos con su ruta absoluta. Menciona que en la transcripción ilustrada se puede buscar y, si hay grabación, hacer clic en una frase para escucharla (enlaza la grabación: si se mueve, el reproductor avisa).
 - Si no los pidió, ofrece en una línea exportar la minuta a PDF, Word o CSV de pendientes.
-- Di qué tan confiable es la transcripción: si es automática, si tiene hablantes y qué términos corregiste. Di cuántas citas se verificaron (la línea "Evidencia" del comando `minuta`).
+- Di qué tan confiable es la transcripción: si es automática, si tiene hablantes y qué términos corregiste.
 - Menciona que `_revision/` y `_registro/` son de trabajo y se pueden borrar.
 - Si corregiste términos que no estaban en el glosario, ofrece guardarlos en `.minutas-video/glosario.toml` del proyecto (formato en `references/configuracion.md`) para que la próxima vez se detecten solos. Para configurar todo con calma: `/minutas-video:configurar`.
-- Si los hablantes salieron de la separación automática, dilo, junto con los nombres que asignaste y con qué evidencia. Para saber con certeza quién dijo qué, la transcripción que exporta la plataforma (Teams, Zoom, Meet) sigue siendo mejor.
+- Si no hubo hablantes y el usuario necesita saber quién dijo qué, sugiere exportar la transcripción de la plataforma la próxima vez (Teams, Zoom y Meet la generan con nombres). Si se usó `--separar-hablantes`, di qué nombres asignaste y con qué evidencia.

@@ -13,7 +13,7 @@ import sys
 import time
 from pathlib import Path
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 PAUSA_PARRAFO = 1.5   # s de silencio que cortan un párrafo en el .txt
 MAX_PALABRAS = 60     # palabras por párrafo en el .txt antes de cortar
 PREFIJO_PROGRESO = "@progreso "

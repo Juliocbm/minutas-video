@@ -1,6 +1,6 @@
 # Formato de las salidas
 
-Todo queda en una carpeta, por defecto `<carpeta de la grabación>/<nombre>_minuta/`. En [`ejemplo/`](ejemplo/) hay una completa, generada a partir de una reunión ficticia. Todo lo genera `minutas.py`, salvo `minuta.json` y el contexto, que los redacta Claude.
+Todo queda en una carpeta, por defecto `<carpeta de la grabación>/<nombre>_minuta/`. En [`ejemplo/`](ejemplo/) hay una completa, generada a partir de una reunión ficticia. Todo lo genera `minutas.py`, salvo `minuta.md` y el contexto, que los redacta Claude. El ejemplo incluye también las salidas opcionales (`ocr.json`, `capturas.txt` y la minuta verificada `minuta.json`).
 
 ## `transcripcion.json`
 
@@ -33,7 +33,7 @@ Formato intermedio. Lo producen tanto `transcribir.py` como `importar_transcripc
 
 ## `hablantes.json`
 
-Quién habla en cada momento, según la separación automática (sherpa-onnx). Solo existe cuando transcribe Whisper y el preset separa hablantes.
+Quién habla en cada momento, según la separación automática (sherpa-onnx). Solo existe con `--separar-hablantes` (apagado por defecto) y cuando transcribe Whisper.
 
 ```json
 {
@@ -83,7 +83,7 @@ Un subtítulo por segmento, con el prefijo `Nombre:` cuando hay hablante. Se pue
 
 ## `ocr.json` y `capturas.txt`
 
-El texto de cada captura, leído con RapidOCR (modelo PP-OCRv6 multilingüe, en CPU). Se omite con `--no-ocr`.
+El texto de cada captura, leído con RapidOCR (modelo PP-OCRv6 multilingüe, en CPU). Solo existe con `--ocr` (apagado por defecto).
 
 ```json
 {
@@ -126,7 +126,7 @@ Solo existe si el proyecto o el usuario tienen `glosario.toml` o `participantes.
 }
 ```
 
-`nota` aparece sola en la transcripción ilustrada. `minutas.py minuta` usa las variantes encontradas para reconocer una cita que dice «NEXO» donde la transcripción dice «Nexus».
+`nota` aparece sola en la transcripción ilustrada. `minutas.py minuta` (opcional) usa las variantes encontradas para reconocer una cita que dice «NEXO» donde la transcripción dice «Nexus».
 
 ## `reunion.json`
 
@@ -154,47 +154,32 @@ El manifiesto de la reunión: con qué se procesó y qué pasos están hechos. P
 ## `progreso.json` y `_registro/`
 
 - `progreso.json` tiene el avance en vivo: estado general y, por paso, `pct`, `restante_s`, `fase` y `detalle`. Lo lee `minutas.py seguir` y sirve para cualquier otra vista de progreso.
-- `_registro/hitos.log` tiene las líneas importantes con hora: inicio, 25, 50 y 75 %, fin o error de cada paso. Es lo que Claude sigue mientras procesa.
+- `_registro/hitos.log` tiene las líneas importantes con hora: inicio, 25, 50 y 75 %, fin o error de cada paso.
 - `_registro/<paso>.log` es la salida completa de cada script, con el comando que se corrió. Ahí está el detalle de un error.
 
 ## `transcripcion-ilustrada.html`
 
 - Un solo archivo con tema claro y oscuro automático.
-- Arriba, una barra para buscar en lo dicho y en el texto de las capturas (todas las palabras, sin importar acentos ni mayúsculas; Enter y Mayús+Enter recorren los resultados) y, si hay varios hablantes, un filtro por hablante.
+- Arriba, una barra para buscar en lo dicho y, con `--ocr`, en el texto de las capturas (todas las palabras, sin importar acentos ni mayúsculas; Enter y Mayús+Enter recorren los resultados) y, si hay varios hablantes, un filtro por hablante.
 - Con grabación, un reproductor fijo: clic en una frase y la grabación salta a ese momento; la frase que suena se resalta y se sigue hasta que haces scroll a mano. La grabación se enlaza con una ruta relativa, no se copia. Los enlaces `#t285` de la minuta también la dejan en ese momento.
-- Con capturas: cada sección pone la imagen a la izquierda y lo dicho a la derecha, con una barra de tiempos para saltar. Bajo el tiempo de cada sección, el texto de la captura en un bloque desplegable: la búsqueda del navegador (Ctrl+F) lo encuentra. Las capturas repetidas enlazan a la original.
+- Con capturas: cada sección pone la imagen a la izquierda y lo dicho a la derecha, con una barra de tiempos para saltar. Con `--ocr`, bajo el tiempo de cada sección, el texto de la captura en un bloque desplegable: la búsqueda del navegador (Ctrl+F) lo encuentra. Las capturas repetidas enlazan a la original.
 - Sin capturas: solo la transcripción.
 - Cada frase lleva su segundo (`data-t`) y un ancla (`#t285`): `minuta.md` enlaza ahí y el navegador la resalta.
 - Necesita la carpeta `capturas/` al lado, salvo que se genere con `--incrustar`.
 
-## `minuta.json` y `minuta.md`
+## `minuta.md`
 
-Claude redacta `minuta.json`, la fuente única de la minuta: participantes, acuerdos, temas con sus puntos, preguntas abiertas, riesgos, pendientes y diferencias con documentos. Cada elemento lleva su evidencia: el momento, la cita textual y, si aplica, la captura.
+La redacta Claude con las plantillas de [references/minuta.md](../skills/procesar-reunion/references/minuta.md): la **completa** (acuerdos en tabla, temas tratados, pendientes y diferencias con documentos) o la **corta** del preset `rapido`. Cada acuerdo lleva su minuto, enlazado a la frase de la transcripción ilustrada (`[04:45](transcripcion-ilustrada.html#t285)`), y su captura si la hay. Ver el [ejemplo](ejemplo/minuta.md).
 
-```json
-{
-  "plantilla": "completa",
-  "titulo": "Revisión de lanzamiento",
-  "acuerdos": [
-    { "tema": "Lanzamiento", "texto": "27 de noviembre, si el reintento de SMS está listo el 18.",
-      "evidencia": [ { "t": "04:45", "cita": "lanzamos el veintisiete de noviembre", "captura": 5 } ] }
-  ],
-  "pendientes": [
-    { "texto": "Reintento de SMS", "responsable": "Luis", "fecha": "18/11",
-      "evidencia": [ { "t": "03:00", "cita": "reintento y respaldo por correo, Luis, antes del dieciocho" } ] }
-  ]
-}
-```
-
-`minutas.py minuta <salida>` la valida, busca cada cita en la transcripción (de 30 s antes a 90 s después del momento) y en el texto de la captura citada, y genera `minuta.md`. Reporta las citas que no cuadran (en otro minuto, reescritas, inexistentes) y el pie de la minuta dice cuántas se verificaron. El formato completo está en [references/minuta.md](../skills/procesar-reunion/references/minuta.md). Ver el [ejemplo](ejemplo/minuta.json) y [su minuta](ejemplo/minuta.md).
+Opcional: Claude también puede escribir `minuta.json` y generar `minuta.md` con `minutas.py minuta`, que verifica cada cita contra la transcripción. No se usa por defecto; el formato está en [minuta-verificada.md](minuta-verificada.md).
 
 ## `minuta.pdf`, `minuta.docx` y `pendientes.csv`
 
-Los genera `minutas.py exportar <salida> [pdf] [docx] [csv]` desde `minuta.json`, solo si se piden. Tienen el contenido de `minuta.md` sin enlaces a archivos locales: quien los recibe no tiene la transcripción ilustrada, así que los minutos y las capturas van como texto.
+Los genera `minutas.py exportar <salida> [pdf] [docx] [csv]` desde `minuta.md`, solo si se piden. Tienen su contenido sin enlaces a archivos locales: quien los recibe no tiene la transcripción ilustrada, así que los minutos y las capturas van como texto.
 
 - `minuta.pdf`: tamaño carta, impreso por Edge o Chrome en modo headless.
 - `minuta.docx`: con estilos de Word (título, encabezados, tablas con cuadrícula), editable.
-- `pendientes.csv`: UTF-8 con BOM y comas, una fila por pendiente con `#`, `Pendiente`, `Responsable`, `Fecha`, `Minuto`, `Cita` e `Inferido`.
+- `pendientes.csv`: UTF-8 con BOM y comas: la tabla de la sección «Pendientes» tal cual, o sus viñetas («acción · responsable · fecha») en las columnas `#`, `Pendiente`, `Responsable` y `Fecha`.
 
 ## `contexto-<tema>.md`
 

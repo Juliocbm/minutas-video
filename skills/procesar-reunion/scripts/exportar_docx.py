@@ -8,8 +8,8 @@
 
 Uso: uv run exportar_docx.py <salida>
 
-Sale de minuta.json (validada y verificada como en `minutas.py minuta`), sin enlaces a archivos
-locales: los minutos y las capturas van como texto. Lo normal es correrlo con `minutas.py exportar`.
+Sale de minuta.md, sin enlaces a archivos locales: los minutos y las capturas van como texto. Lo normal es
+correrlo con `minutas.py exportar`.
 """
 import argparse
 import sys
@@ -20,7 +20,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.shared import Pt, RGBColor
 
 from comun import configurar_consola
-from exportar import bloques, inline, markdown_para_compartir, plano
+from exportar import bloques, inline, leer_minuta, plano
 
 
 def agregar_texto(parrafo, texto):
@@ -87,13 +87,13 @@ def main():
     p.add_argument("salida")
     a = p.parse_args()
     salida = Path(a.salida)
-    preparada = markdown_para_compartir(salida)
-    if isinstance(preparada, dict):
-        print("minuta.json tiene errores: " + "; ".join(preparada["errores"]))
+    leida = leer_minuta(salida)
+    if leida is None:
+        print(f"No existe {salida / 'minuta.md'}.")
         sys.exit(2)
-    md, m, _ = preparada
+    md, titulo = leida
     destino = salida / "minuta.docx"
-    documento(md, f"Minuta · {m['titulo']}").save(destino)
+    documento(md, titulo).save(destino)
     print(f"Word: {destino}")
 
 

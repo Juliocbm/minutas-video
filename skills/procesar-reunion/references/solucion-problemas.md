@@ -61,7 +61,7 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 
 **Una captura dice "igual a la 0012".** La pantalla volvió a algo que ya se había mostrado (una lámina anterior, la misma ventana). La imagen se guarda igual, pero no se revisa ni se le pasa el OCR otra vez. Si el cambio era pequeño pero importante (un dato en una tabla), está en esa imagen: ábrela.
 
-## Hablantes
+## Hablantes (`--separar-hablantes`)
 
 **Salen más hablantes de los que había.** Sin saber cuántas personas hablan, la separación puede partir a alguien en dos (una voz que cambia de tono, un micrófono que se aleja). Vuelve a procesar con `--hablantes N`: solo se rehace la separación y lo que depende de ella.
 
@@ -75,23 +75,13 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 
 **La primera vez tarda más.** Descarga dos modelos de GitHub (unos 46 MB en total) a la caché del plugin: `%LOCALAPPDATA%\minutas-video\modelos` en Windows, `~/.cache/minutas-video/modelos` en macOS y Linux (o `MINUTAS_MODELOS`).
 
-## Texto de las capturas (OCR)
+## Texto de las capturas (`--ocr`)
 
-**Tarda varios minutos.** El OCR corre en CPU, unos 4 s por captura de 1080p, y empieza en cuanto terminan las capturas, mientras sigue la transcripción. Para omitirlo: `--no-ocr` (o `ocr = false` en `[capturas]` de `config.toml`).
+**Tarda varios minutos.** El OCR corre en CPU, unos 4 s por captura de 1080p, después de la transcripción. Viene apagado; se prende con `--ocr` (o `ocr = true` en `[capturas]` de `config.toml`).
 
 **Texto con errores o en desorden.** Es OCR automático: puede confundir caracteres, y en pantallas con varias columnas mezcla el orden de las líneas. Úsalo para encontrar y citar; confirma los datos críticos en la imagen.
 
 **Falló el paso "texto de las capturas".** La transcripción ilustrada se genera igual, sin el texto. La causa está en `_registro/ocr.log`; al volver a correr el comando, solo se reintenta el OCR (y el HTML).
-
-## Minuta (`minutas.py minuta`)
-
-**"minuta.json tiene errores".** Falta un campo obligatorio, sobra una clave (por ejemplo `evidencias` en lugar de `evidencia`) o un tiempo está mal escrito. El mensaje dice dónde; el formato está en `references/minuta.md`. No se genera nada hasta corregirlo.
-
-**"la cita está en 12:40, no cerca de 05:30".** El momento no corresponde: corrige `t`. La cita se busca de 30 s antes a 90 s después del momento indicado.
-
-**"se parece, pero no es textual".** La cita se reescribió. Cópiala tal cual de `transcripcion.txt` (se aceptan muletillas omitidas y saltos con «…»).
-
-**"no aparece en la transcripción".** Puede venir de la pantalla: indica la captura y cópiala de `capturas.txt`. Si no hay respaldo textual, quita la cita o marca el elemento como `"inferido": true`.
 
 ## Transcripción ilustrada y exportaciones
 
@@ -102,6 +92,8 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 **La primera exportación a Word tarda.** uv instala python-docx la primera vez; luego queda en caché.
 
 **Excel muestra mal los acentos del CSV.** `pendientes.csv` va en UTF-8 con BOM, que Excel reconoce al abrirlo con doble clic. Si lo importas a mano, elige UTF-8.
+
+**"la minuta no tiene una sección «Pendientes»".** El CSV sale de la tabla (o las viñetas) bajo el título `## Pendientes` de `minuta.md`. Si no hubo pendientes, escribe "Ninguno" en esa sección: el CSV sale solo con el encabezado.
 
 ## Otros
 

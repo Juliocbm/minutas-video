@@ -1,14 +1,14 @@
 """Exporta la minuta para compartirla: PDF, Word (.docx) y CSV de pendientes.
 
-Todo sale de minuta.json, validada y verificada igual que con `minutas.py minuta`. Los documentos van
-sin enlaces a archivos locales: los minutos y las capturas se escriben como texto, porque quien recibe
-el PDF o el Word no tiene la transcripción ilustrada.
+Todo sale de minuta.md, la que escribe Claude (o la que genera `minutas.py minuta` desde minuta.json). Los documentos
+van sin enlaces a archivos locales: los minutos y las capturas quedan como texto, porque quien recibe el PDF o el Word
+no tiene la transcripción ilustrada.
 
 - PDF: el Markdown de la minuta se convierte a HTML con estilos de impresión y lo imprime Edge o
   Chrome en modo headless (con un perfil temporal, para no chocar con el navegador abierto).
 - Word: exportar_docx.py, con python-docx (tiene sus propias dependencias; lo corre uv).
-- CSV: pendientes con responsable, fecha, minuto y cita, en UTF-8 con BOM para que Excel respete los
-  acentos.
+- CSV: la tabla de la sección «Pendientes» tal cual (o sus viñetas, partidas en « · »), en UTF-8 con BOM para que
+  Excel respete los acentos.
 
 Solo biblioteca estándar. Lo usa `minutas.py exportar`.
 """
@@ -20,8 +20,6 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-
-import minuta as minmod
 
 FORMATOS = ("pdf", "docx", "csv")
 ARCHIVO = {"pdf": "minuta.pdf", "docx": "minuta.docx", "csv": "pendientes.csv"}
@@ -194,52 +192,71 @@ def imprimir_pdf(html_texto, destino):
 
 # ───────────────────────── CSV ─────────────────────────
 
-def escribir_csv(minuta, render, destino):
+CABECERA_LISTA = ["#", "Pendiente", "Responsable", "Fecha"]
+
+
+def pendientes(markdown):
+    """Filas de la sección «Pendientes», con su encabezado: sus tablas o sus viñetas (la plantilla corta usa
+    «acción · responsable · fecha»). [] si dice «Ninguno»; None si la minuta no tiene esa sección."""
+    bs = bloques(markdown)
+    for i, b in enumerate(bs):
+        if b["tipo"] in ("h2", "h3") and plano(b["texto"]).strip().lower().startswith("pendientes"):
+            nivel, filas, items = b["tipo"], [], []
+            for sig in bs[i + 1:]:
+                if sig["tipo"] in ("hr", "h1") or (sig["tipo"] == "h2" and nivel == "h2")                         or (sig["tipo"] in ("h2", "h3") and nivel == "h3"):
+                    break
+                if sig["tipo"] == "tabla":
+                    cabeza, *resto = [[plano(c) for c in f] for f in sig["filas"]]
+                    filas = (filas or [cabeza]) + resto
+                elif sig["tipo"] == "lista":
+                    items += sig["items"]
+            if filas or not items:  # con tabla, las viñetas son notas
+                return filas
+            filas = [CABECERA_LISTA]
+            for item in items:
+                partes = [x.strip() for x in plano(item).split(" · ")][:3]
+                filas.append([str(len(filas)), *partes, *[""] * (3 - len(partes))])
+            return filas
+    return None
+
+
+def escribir_csv(filas, destino):
     with open(destino, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["#", "Pendiente", "Responsable", "Fecha", "Minuto", "Cita", "Inferido"])
-        for i, p in enumerate(minuta.get("pendientes") or [], start=1):
-            evidencia = p.get("evidencia") or []
-            w.writerow([i, plano(p["texto"]), p.get("responsable", ""), p.get("fecha", ""), render.tiempos(p),
-                        " | ".join(ev["cita"] for ev in evidencia if ev.get("cita")),
-                        "sí" if p.get("inferido") else ""])
+        csv.writer(f).writerows(filas)
 
 
 # ───────────────────────── comando ─────────────────────────
 
-def markdown_para_compartir(salida):
-    """(markdown sin enlaces, minuta, render) o un dict de error de minuta.preparar()."""
-    preparada = minmod.preparar(salida)
-    if isinstance(preparada, dict):
-        return preparada
-    m, ctx, resultado = preparada
-    render = minmod.Render(m, ctx, resultado, enlaces=False)
-    return render.markdown(), m, render
+def leer_minuta(salida):
+    """(markdown, título) de <salida>/minuta.md, o None si no existe."""
+    ruta = Path(salida) / "minuta.md"
+    if not ruta.exists():
+        return None
+    md = ruta.read_text(encoding="utf-8-sig")
+    titulo = next((plano(b["texto"]) for b in bloques(md) if b["tipo"] == "h1"), "Minuta")
+    return md, titulo
 
 
 def comando(salida, formatos, correr_docx):
     """Para `minutas.py exportar`. `correr_docx(salida)` corre exportar_docx.py con uv y devuelve
-    (código, salida). Código 0 si todo se exportó, 1 si algún formato falló, 2 si minuta.json no es válida."""
+    (código, salida). Código 0 si todo se exportó, 1 si algún formato falló, 2 si no hay minuta.md."""
     salida = Path(salida)
-    preparada = markdown_para_compartir(salida)
-    if isinstance(preparada, dict):
-        print("minuta.json tiene errores; corrígelos con `minutas.py minuta` antes de exportar:")
-        for e in preparada["errores"]:
-            print(f"  - {e}")
+    leida = leer_minuta(salida)
+    if leida is None:
+        print(f"No existe {salida / 'minuta.md'}: escribe la minuta antes de exportarla.")
         return 2
-    md, m, render = preparada
-    res = render.res
-    if res["problemas"]:
-        print(f"Aviso: {len(res['problemas'])} problemas de evidencia sin corregir (ver `minutas.py minuta`); "
-              f"el documento dice cuántas citas se verificaron.")
+    md, titulo = leida
     fallos = 0
     for formato in formatos:
         destino = salida / ARCHIVO[formato]
         try:
             if formato == "csv":
-                escribir_csv(m, render, destino)
+                filas = pendientes(md)
+                if filas is None:
+                    raise RuntimeError("la minuta no tiene una sección «Pendientes»")
+                escribir_csv(filas or [CABECERA_LISTA], destino)
             elif formato == "pdf":
-                imprimir_pdf(a_html(bloques(md), f"Minuta · {m['titulo']}"), destino)
+                imprimir_pdf(a_html(bloques(md), titulo), destino)
             else:
                 codigo, texto = correr_docx(salida)
                 if codigo != 0:

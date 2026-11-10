@@ -3,8 +3,39 @@ import json
 import shutil
 
 from conftest import EJEMPLO, pantalla_con_texto, video_de_pantallas
+from minutas import EXTERNOS, puede_arrancar
 
 SALIDA = "reunion-demo_minuta"
+
+
+def simular(duraciones):
+    """El bucle de minutas.ejecutar con duraciones ficticias: devuelve [inicio, fin] de cada paso."""
+    pendientes = [p for p in EXTERNOS if p in duraciones]
+    en_curso, tiempos, t = {}, {}, 0.0
+    while pendientes or en_curso:
+        for paso in list(pendientes):
+            if puede_arrancar(paso, pendientes, en_curso):
+                pendientes.remove(paso)
+                en_curso[paso] = t + duraciones[paso]
+                tiempos[paso] = [t, None]
+        t = min(en_curso.values())
+        for paso, fin in list(en_curso.items()):
+            if fin <= t:
+                tiempos[paso][1] = fin
+                del en_curso[paso]
+    return tiempos
+
+
+def test_los_pasos_pesados_corren_de_uno_en_uno():
+    t = simular({"transcripcion": 3.5, "hablantes": 3.7, "capturas": 2, "ocr": 5})
+    assert t["transcripcion"][0] == t["capturas"][0] == 0  # las capturas acompañan a la transcripción
+    assert t["hablantes"][0] == t["transcripcion"][1]      # los hablantes, al terminar la transcripción
+    assert t["ocr"][0] == t["hablantes"][1]                # y el OCR después: nunca dos pesados a la vez
+
+
+def test_el_ocr_no_espera_pasos_que_no_corren():
+    assert simular({"capturas": 2, "ocr": 5})["ocr"][0] == 2  # transcripción importada
+    assert simular({"transcripcion": 3.5, "capturas": 2, "ocr": 5})["ocr"][0] == 3.5  # sin separar hablantes
 
 
 def test_procesa_y_reanuda_sin_repetir(correr_script, demo_vtt, tmp_path):
@@ -84,7 +115,7 @@ def test_video_con_transcripcion_importada_lee_el_texto_de_las_capturas(correr_s
     agenda = pantalla_con_texto(["Agenda de la revision", "Fecha de lanzamiento"])
     metricas = pantalla_con_texto(["Reservas por semana", "120 a 410"], fondo=(205, 225, 250))
     video_de_pantallas(video, [agenda, metricas, agenda])
-    r = correr_script("minutas.py", "procesar", video.name, "--transcripcion", demo_vtt.name)
+    r = correr_script("minutas.py", "procesar", video.name, "--transcripcion", demo_vtt.name, "--ocr")
     assert r.returncode == 0, r.stdout + r.stderr
     for paso in ("transcripción", "capturas", "texto de las capturas", "transcripción ilustrada"):
         assert f"✓ {paso}: listo" in r.stdout, paso
@@ -102,13 +133,13 @@ def test_video_con_transcripcion_importada_lee_el_texto_de_las_capturas(correr_s
     assert "Texto en pantalla" not in (salida / "transcripcion-ilustrada.html").read_text(encoding="utf-8")
 
 
-def test_plan_con_video_incluye_ocr_salvo_que_se_apague(correr_script, tmp_path):
+def test_plan_con_video_sin_ocr_ni_hablantes_salvo_que_se_pidan(correr_script, tmp_path):
     video = tmp_path / "junta.mp4"
     video.write_bytes(b"")  # el plan no abre el video
     acciones = json.loads(correr_script("minutas.py", "procesar", video.name, "--plan").stdout)["entradas"][0]["acciones"]
-    assert acciones["ocr"]["accion"] == "correr"
-    plan = json.loads(correr_script("minutas.py", "procesar", video.name, "--plan", "--no-ocr").stdout)
-    assert "ocr" not in plan["entradas"][0]["acciones"]
+    assert {"transcripcion", "capturas", "html"} <= set(acciones) and not {"ocr", "hablantes"} & set(acciones)
+    plan = json.loads(correr_script("minutas.py", "procesar", video.name, "--plan", "--ocr", "--separar-hablantes").stdout)
+    assert {"ocr", "hablantes"} <= set(plan["entradas"][0]["acciones"])
 
 
 def test_comando_minuta(correr_script, tmp_path):
@@ -124,8 +155,7 @@ def test_comando_minuta(correr_script, tmp_path):
 def test_comando_exportar_csv_y_formato_desconocido(correr_script, tmp_path):
     salida = tmp_path / "ejemplo"
     salida.mkdir()
-    for archivo in ("transcripcion.json", "capturas.json", "ocr.json", "minuta.json"):
-        shutil.copy(EJEMPLO / archivo, salida / archivo)
+    shutil.copy(EJEMPLO / "minuta.md", salida / "minuta.md")
     r = correr_script("minutas.py", "exportar", salida, "csv")
     assert r.returncode == 0 and "✓ CSV" in r.stdout and (salida / "pendientes.csv").exists()
     r = correr_script("minutas.py", "exportar", salida, "ics")

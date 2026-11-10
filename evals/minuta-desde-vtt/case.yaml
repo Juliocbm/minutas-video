@@ -1,9 +1,9 @@
 schema_version: "1.1"
 name: minuta-desde-vtt
 expected_outcome: |
-  Se activa procesar-reunion, procesa reunion-demo.vtt con minutas.py (importación, sin Whisper),
-  redacta reunion-demo_minuta/minuta.json con la plantilla completa y genera minuta.md con
-  minutas.py minuta: el lanzamiento el 27 de noviembre condicionado al reintento de SMS, pendientes
-  con responsable, minutos en cada acuerdo y todas las citas verificadas.
+  Se activa procesar-reunion, procesa reunion-demo.vtt con minutas.py (importación, sin Whisper) y
+  redacta reunion-demo_minuta/minuta.md con la plantilla completa: el lanzamiento el 27 de noviembre
+  condicionado al reintento de SMS, pendientes con responsable y minutos en cada acuerdo, enlazados a
+  la transcripción ilustrada.
 context:
   scaffold_script: place-files.sh

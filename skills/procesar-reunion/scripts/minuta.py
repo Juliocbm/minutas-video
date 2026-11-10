@@ -9,7 +9,7 @@ en el texto de esa captura (ocr.json). No corrige nada: reporta lo que no cuadra
 redacta lo arregle. Los términos del glosario se toman en cuenta: una cita puede decir «NEXO» donde
 la transcripción dice «Nexus».
 
-Formato de minuta.json: references/minuta.md. Solo biblioteca estándar.
+Formato de minuta.json: docs/minuta-verificada.md (opcional; la skill escribe minuta.md directamente). Solo biblioteca estándar.
 """
 import bisect
 import json

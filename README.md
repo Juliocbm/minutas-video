@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>De la grabación de una reunión a una minuta que se puede verificar.</b><br>
-  Transcripción local con Whisper · capturas de lo que se mostraba, con su texto · transcripción ilustrada · minuta con cada acuerdo respaldado por una cita verificada
+  Transcripción local con Whisper · capturas de lo que se mostraba · transcripción ilustrada con reproductor · minuta con cada acuerdo en su minuto
 </p>
 
 <p align="center">
@@ -37,10 +37,10 @@
 
 Le pasas a Claude la grabación de una junta y te devuelve:
 
-- **La transcripción** con marcas de tiempo (`.txt` y `.srt`), hecha en tu máquina, con **quién habla** en cada momento («Hablante 1», «Hablante 2»…, o sus nombres cuando hay evidencia).
-- **Capturas** automáticas cada vez que cambia lo que se muestra en pantalla, con **su texto** (OCR) para buscarlo y citarlo. Si la pantalla vuelve a algo ya visto, la captura queda marcada como repetida.
-- **Una transcripción ilustrada** en HTML: cada captura junto a lo que se dijo mientras estuvo visible. Así "como ven aquí…" vuelve a tener sentido. Se puede buscar en lo dicho y en pantalla, filtrar por hablante y, con un clic en cualquier frase, escuchar ese momento de la grabación.
-- **Una minuta** con acuerdos, temas y pendientes, cada uno con su minuto, su captura y la cita textual que lo respalda. Antes de entregarla, cada cita se verifica contra la transcripción, y cada minuto enlaza a la frase exacta. Si le das documentos relacionados, señala qué cambió la reunión respecto a lo escrito.
+- **La transcripción** con marcas de tiempo (`.txt` y `.srt`), hecha en tu máquina.
+- **Capturas** automáticas cada vez que cambia lo que se muestra en pantalla. Si la pantalla vuelve a algo ya visto, la captura queda marcada como repetida y no se revisa dos veces.
+- **Una transcripción ilustrada** en HTML: cada captura junto a lo que se dijo mientras estuvo visible. Así "como ven aquí…" vuelve a tener sentido. Se puede buscar en lo dicho y, con un clic en cualquier frase, escuchar ese momento de la grabación.
+- **Una minuta** con acuerdos, temas y pendientes, cada uno con su minuto (enlazado a la frase exacta de la transcripción ilustrada) y su captura. Claude mira las pantallas, no solo escucha. Si le das documentos relacionados, señala qué cambió la reunión respecto a lo escrito.
 - Opcional: **la minuta en PDF o Word** para compartirla, y **los pendientes en CSV** para Excel o Jira.
 - Opcional: **un paquete de contexto** para pegarle lo acordado a otra sesión de Claude, por ejemplo la que implementa lo que se decidió.
 
@@ -95,7 +95,7 @@ Si falta algo por decidir, Claude te lo pregunta en una sola ventana de opciones
 
 ### Avance y reanudación
 
-- Mientras procesa, Claude te avisa en hitos: "Transcripción al 50 %, faltan ~2 min". Para ver una barra en vivo, corre en tu terminal el comando `seguir` que te indica.
+- Mientras procesa, Claude espera sin gastar tokens y retoma al terminar. Para ver una barra en vivo, corre en tu terminal el comando `seguir` que te indica.
 - Si algo falla o se interrumpe, vuelve a pedirlo: lo que ya terminó no se repite. Lo mismo si cambias una opción: solo se rehace lo que depende de ella.
 
 ## Entradas y salidas
@@ -110,15 +110,13 @@ Si falta algo por decidir, Claude te lo pregunta en una sola ventana de opciones
 | Salida (en `<grabación>_minuta/`) | Lo genera |
 |---|---|
 | `transcripcion.txt` · `.srt` · `.json` | Whisper, en local |
-| `hablantes.json` | Separación de hablantes con sherpa-onnx, en local |
 | `capturas/` · `capturas.json` | Comparación de imágenes, en local |
-| `capturas.txt` · `ocr.json` | OCR del texto de cada captura, en local |
 | `glosario.json` | Búsqueda de los términos del glosario, en local |
 | `transcripcion-ilustrada.html` | Script, en local |
 | `reunion.json` · `progreso.json` · `_registro/` | Registro de cada paso, en local |
-| `minuta.json` · `contexto-<tema>.md` | Claude |
-| `minuta.md` | Script, a partir de `minuta.json` y tras verificar sus citas |
-| `minuta.pdf` · `minuta.docx` · `pendientes.csv` | Script, a partir de `minuta.json`, si los pides |
+| `minuta.md` · `contexto-<tema>.md` | Claude |
+| `minuta.pdf` · `minuta.docx` · `pendientes.csv` | Script, a partir de `minuta.md`, si los pides |
+| `hablantes.json` · `capturas.txt` · `ocr.json` | Solo con `--separar-hablantes` o `--ocr` ([ver abajo](#opciones-apagadas-por-defecto)) |
 
 El detalle de cada formato está en [docs/salidas.md](docs/salidas.md).
 
@@ -126,8 +124,7 @@ El detalle de cada formato está en [docs/salidas.md](docs/salidas.md).
 
 - **Whisper** (IA de voz) transcribe en tu GPU o CPU. No necesita internet una vez descargado el modelo.
 - **Las capturas no usan IA:** se compara cada segundo del video con la última captura y se guarda cuando el cambio es grande y la imagen ya se estabilizó.
-- **El texto de las capturas** lo lee [RapidOCR](https://github.com/RapidAI/RapidOCR) en tu CPU, con un modelo multilingüe que viene en el propio paquete.
-- **Claude** orquesta todo y redacta la minuta como datos (`minuta.json`): lee la transcripción y el texto de las capturas, mira las imágenes que importan, separa acuerdos de propuestas y contrasta con tus documentos. Un script verifica cada cita y genera `minuta.md`.
+- **Claude** orquesta todo y redacta la minuta: lee la transcripción, mira las hojas de miniaturas y abre las capturas que importan, separa acuerdos de propuestas y contrasta con tus documentos.
 
 Más detalle en [docs/arquitectura.md](docs/arquitectura.md). Los scripts también se pueden [usar sin Claude](docs/uso-sin-claude.md).
 
@@ -138,19 +135,22 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md). Los scripts tambi�
 | **Claude Code** | Para usarlo como plugin |
 | **GPU NVIDIA** (opcional) | Unos 5 min por hora de audio con el modelo large-v3. Requiere un driver reciente; las librerías CUDA se instalan solas |
 | **Sin GPU** | Funciona en CPU con modelos más chicos (medium o small) |
-| **Espacio** | ~3 GB para el modelo large-v3, ~1.5 GB para las librerías CUDA, ~260 MB para el OCR y ~100 MB para separar hablantes, descargados una vez |
+| **Espacio** | ~3 GB para el modelo large-v3 y ~1.5 GB para las librerías CUDA, descargados una vez (más ~260 MB para el OCR y ~100 MB para separar hablantes, si los usas) |
 
 Probado en Windows 11 con GPU NVIDIA. Los scripts son multiplataforma, pero macOS y Linux aún no se han probado ([backlog](BACKLOG.md)).
 
 ## Quién dijo qué
 
-Whisper recibe el audio ya mezclado y no distingue voces. Por eso el plugin separa a los hablantes por su cuenta, en tu CPU y sin cuentas ni tokens: usa [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) con el modelo de segmentación de pyannote y un modelo de voces que se descargan de GitHub la primera vez (unos 46 MB).
+Whisper recibe el audio ya mezclado y no distingue voces. Si la plataforma generó una transcripción con nombres (Teams, Zoom y Meet pueden exportar `.vtt`), dásela junto con el video: trae los hablantes exactos. Sin ella, Claude deduce quién habla por el contexto (a quién le dan la palabra, quién aparece resaltado en la videollamada) y marca lo deducido.
 
-- El resultado es «Hablante 1», «Hablante 2»…: la separación no sabe nombres. Claude se los pone cuando hay evidencia (alguien se presenta, lo llaman por su nombre, aparece en el mosaico) y lo marca como deducido.
-- Medido con el corpus público AMI (reuniones reales de cuatro personas), el error de diarización fue del 23 %, y solo el 7 % es confusión entre personas; el resto es habla encimada. Como referencia, pyannote community-1, que requiere cuenta de Hugging Face, publica 17 % en las mismas condiciones.
-- Funciona mejor en reuniones de más de unos 10 minutos: necesita muchas muestras de cada voz.
+## Opciones apagadas por defecto
 
-Si la plataforma generó una transcripción con nombres (Teams, Zoom y Meet pueden exportar `.vtt`), dásela junto con el video: trae los hablantes exactos y la separación automática no hace falta.
+Dos funciones existen pero vienen apagadas, porque se midieron con reuniones reales contra la primera versión del plugin y no mejoraron la minuta: sumaban unos 9 minutos por reunión.
+
+- **`--separar-hablantes`**: separa las voces en tu CPU, sin cuentas ni tokens, con [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (el modelo de segmentación de pyannote y un modelo de voces, unos 46 MB de GitHub). La transcripción sale con «Hablante 1», «Hablante 2»…, y Claude les pone nombre cuando hay evidencia. Con el corpus público AMI, el error fue del 23 % (pyannote community-1, que requiere cuenta de Hugging Face, publica 17 %). En una reunión ayudó a atribuir bien quién dijo qué; en una daily con once personas juntó a dos. Unos 5 minutos más.
+- **`--ocr`**: lee el texto de cada captura con [RapidOCR](https://github.com/RapidAI/RapidOCR), en tu CPU. Sirve para buscar en lo que se mostró, pero cuando Claude se apoyaba en ese texto dejaba de mirar las pantallas y la minuta salía menos completa. Unos 4 minutos más.
+
+Se prenden en cada corrida o en `config.toml` (`[capturas] ocr = true`, `[hablantes] separar = true`).
 
 ## Configuración
 
