@@ -24,23 +24,23 @@ CARPETA = ".minutas-video"
 PRESETS = {
     "rapido": {
         "descripcion": "Solo lo esencial: transcripción rápida, sin capturas y una minuta corta.",
-        "modelo": "large-v3-turbo", "capturas": "ninguna", "minuta": "corta", "revision": "ligera",
+        "modelo": "large-v3-turbo", "capturas": "ninguna", "hablantes": False, "minuta": "corta", "revision": "ligera",
         "entregables": ["minuta"],
     },
     "estandar": {
         "descripcion": "Minuta completa y transcripción ilustrada con capturas de pantalla.",
-        "modelo": "", "capturas": "pantalla", "minuta": "completa", "revision": "normal",
+        "modelo": "", "capturas": "pantalla", "hablantes": True, "minuta": "completa", "revision": "normal",
         "entregables": ["minuta", "html"],
     },
     "completo": {
         "descripcion": "Como estándar, más revisión de todas las capturas, contraste con documentos "
                        "y contexto para otra sesión de Claude.",
-        "modelo": "", "capturas": "pantalla", "minuta": "completa", "revision": "exhaustiva",
+        "modelo": "", "capturas": "pantalla", "hablantes": True, "minuta": "completa", "revision": "exhaustiva",
         "entregables": ["minuta", "html", "contexto"],
     },
     "audio": {
         "descripcion": "Grabaciones sin video o cuando lo que se ve no importa: minuta completa, sin capturas.",
-        "modelo": "", "capturas": "ninguna", "minuta": "completa", "revision": "normal",
+        "modelo": "", "capturas": "ninguna", "hablantes": True, "minuta": "completa", "revision": "normal",
         "entregables": ["minuta", "html"],
     },
 }
@@ -50,6 +50,8 @@ DEFECTOS = {
     "idioma": "es",
     "transcripcion": {"modelo": "", "dispositivo": "auto"},
     "capturas": {"modo": "", "max": 200, "ocr": True},
+    # separar: None = lo decide el preset. numero: cuántas personas hablan (0 = no se sabe).
+    "hablantes": {"separar": None, "numero": 0},
 }
 
 # Esquema: clave -> (tipo, valores permitidos o None). Las tablas anidadas son dicts.
@@ -58,6 +60,7 @@ ESQUEMA = {
     "idioma": (str, None),
     "transcripcion": {"modelo": (str, None), "dispositivo": (str, {"auto", "cuda", "cpu"})},
     "capturas": {"modo": (str, {"", "pantalla", "camara", "ninguna"}), "max": (int, None), "ocr": (bool, None)},
+    "hablantes": {"separar": (bool, None), "numero": (int, None)},
 }
 
 
@@ -231,6 +234,9 @@ def cargar(proyecto=None, corrida=None, recomendacion=None):
     if not efectiva["capturas"]["modo"]:
         efectiva["capturas"]["modo"] = preset["capturas"]
         origen["capturas.modo"] = f"preset {nombre_preset}"
+    if efectiva["hablantes"]["separar"] is None:
+        efectiva["hablantes"]["separar"] = preset["hablantes"]
+        origen["hablantes.separar"] = f"preset {nombre_preset}"
     if recomendacion:
         if not efectiva["transcripcion"]["modelo"]:
             efectiva["transcripcion"]["modelo"] = recomendacion["modelo"]

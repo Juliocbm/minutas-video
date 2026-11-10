@@ -18,6 +18,9 @@ flowchart LR
     O --> W[transcribir.py<br/>Whisper local]
     O --> I[importar_transcripcion.py]
     O --> C[extraer_capturas.py<br/>comparación de imágenes]
+    O --> S[separar_hablantes.py<br/>sherpa-onnx]
+    S --> HJ[(hablantes.json)]
+    HJ --> T
     W --> T[(transcripcion.json)]
     I --> T
     C --> K[(capturas.json<br/>capturas/)]
@@ -54,6 +57,7 @@ flowchart LR
 | `minutas.py` (orquestador, glosario) | No es IA: ordena pasos y busca texto | En tu máquina | Gratis |
 | `importar_transcripcion.py` | No es IA: lee subtítulos | En tu máquina | Gratis |
 | `extraer_capturas.py` | No es IA: compara imágenes | En tu máquina | Gratis |
+| `separar_hablantes.py` (sherpa-onnx) | IA de reconocimiento de voces: quién habla, sin nombres | En tu máquina (CPU) | Gratis; los modelos se descargan de GitHub una vez |
 | `ocr_capturas.py` (RapidOCR) | IA de reconocimiento de texto en imágenes | En tu máquina (CPU) | Gratis; el modelo viene en el paquete |
 | `minutas.py minuta` | No es IA: valida, busca cada cita y arma el Markdown | En tu máquina | Gratis |
 | `minutas.py exportar`, `exportar_docx.py` | No es IA: arma PDF (con Edge o Chrome), Word y CSV | En tu máquina | Gratis |
@@ -75,6 +79,8 @@ Whisper convierte audio en texto, pero no entiende la reunión. La parte que dis
 - **El glosario no reescribe la transcripción.** Anota dónde aparece cada variante mal escrita y deja el texto fiel al audio. La corrección se hace en la minuta, con evidencia, y el HTML lleva la nota.
 - **Pantallas repetidas por SSIM, sin hash perceptual.** Con una reunión real, las repeticiones dieron una similitud estructural de 0.98 a 0.996 y la pantalla distinta más parecida, 0.95; el hash perceptual daba 3 bits de distancia entre páginas distintas de un mismo documento. La captura repetida se guarda igual, para que un cambio pequeño (un dato en una tabla) no se pierda: solo se evita revisarla y leerla dos veces.
 - **OCR en CPU con el modelo del paquete.** RapidOCR 3.10 trae PP-OCRv6 multilingüe (incluye español), así que no descarga modelos ni hace falta un respaldo. Los ajustes por defecto fueron los mejores: reducir la imagen o agrandar los lotes perdía texto o tardaba más. Para leer, `capturas.txt` muestra solo lo nuevo de cada captura: en la reunión real, el 30 % de las líneas.
+- **Hablantes con sherpa-onnx, sin cuentas.** Todos los modelos de pyannote en Hugging Face piden cuenta, aceptar condiciones y token: cada usuario del plugin tendría que abrir una cuenta. sherpa-onnx publica en GitHub el modelo de segmentación de pyannote 3.0 convertido (licencia MIT) y varios modelos de voces. Medido con el corpus AMI (`dev/medir_hablantes.py`, mismo protocolo que pyannote): TitaNet small empató al mejor modelo de voces y fue el más rápido (unas 9-11 veces el tiempo real en CPU). Sin decir cuántos hablan, con umbral 1.0 y absorbiendo los "hablantes" de menos de 15 s, el error fue 23.1 % en cuatro reuniones; dar el número real dio 31.7 %, así que no se pregunta. pyannote community-1 publica 17.0 %: la diferencia es sobre todo habla encimada, que casi no cambia a quién se asigna cada frase.
+- **La separación no reescribe la transcripción.** `hablantes.json` guarda los turnos; al leer `transcripcion.json`, cada segmento recibe el hablante con el que más se traslapa. Así, apagar la separación o ponerle nombres a los hablantes no obliga a transcribir de nuevo.
 - **El reproductor enlaza, no copia.** Chrome y Edge reproducen desde el disco las grabaciones `.mkv` de OBS (H.264 y AAC) y saltan a cualquier minuto al instante, así que el HTML apunta a la grabación con una ruta relativa. Copiarla o convertirla duplicaría cientos de megabytes por reunión.
 - **Búsqueda sin dependencias.** Para unos cientos de frases bastan unas líneas de JavaScript (todas las palabras, sin acentos), y la API de resaltado de CSS marca las palabras sin tocar el HTML. Una biblioteca de búsqueda no aportaba nada a ese tamaño.
 - **Exportar sin enlaces.** El PDF y el Word se mandan a otras personas, que no tienen la transcripción ilustrada: los minutos y las capturas van como texto. Ambos salen del mismo Markdown que `minuta.md`, generado con otra opción, para que digan lo mismo. El PDF lo imprime el navegador; el Word, python-docx.

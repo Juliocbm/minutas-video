@@ -31,6 +31,23 @@ Formato intermedio. Lo producen tanto `transcribir.py` como `importar_transcripc
 - `hablante` es `null` con Whisper. Con una transcripción importada trae el nombre que venía en el archivo.
 - Los tiempos están en segundos desde el inicio de la grabación.
 
+## `hablantes.json`
+
+Quién habla en cada momento, según la separación automática (sherpa-onnx). Solo existe cuando transcribe Whisper y el preset separa hablantes.
+
+```json
+{
+  "meta": { "motor": "sherpa-onnx (pyannote segmentation 3.0)", "voz": "nemo_en_titanet_small", "umbral": 0.5,
+            "hablantes_pedidos": null, "hablantes": ["Hablante 1", "Hablante 2", "Hablante 3"], "duracion": 2079.4, "segundos": 230.1 },
+  "turnos": [ { "inicio": 10.88, "fin": 14.97, "hablante": "Hablante 1" } ],
+  "nombres": { "Hablante 1": "Ana Torres" }
+}
+```
+
+- Los hablantes se numeran por orden de aparición. `nombres` lo agrega `minutas.py nombres` cuando hay evidencia de quién es quién.
+- `transcripcion.json` no se modifica: al leerla, cada segmento recibe el hablante con el que más se traslapa en el tiempo. `transcripcion.txt`, `.srt` y la transcripción ilustrada ya salen con los hablantes (y con los nombres, si los hay).
+- Sin `--hablantes`, los "hablantes" con muy poco tiempo (menos de 15 s o del 2 % del habla) se reasignan al turno vecino: casi siempre son pedazos de otra persona.
+
 ## `transcripcion.txt`
 
 Junta los segmentos consecutivos del mismo hablante en párrafos. Corta cuando hay una pausa de más de 1.5 s o el párrafo pasa de unas 60 palabras.
@@ -40,7 +57,7 @@ Junta los segmentos consecutivos del mismo hablante en párrafos. Corta cuando h
 [00:00:19] Luis Méndez: Perfecto. Yo traigo los números…
 ```
 
-Sin hablantes, cada línea empieza solo con el tiempo.
+Sin hablantes, cada línea empieza solo con el tiempo. Con la separación automática, el hablante es «Hablante 1», «Hablante 2»… o el nombre que se le haya puesto.
 
 ## `transcripcion.srt`
 

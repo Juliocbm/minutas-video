@@ -61,6 +61,20 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 
 **Una captura dice "igual a la 0012".** La pantalla volvió a algo que ya se había mostrado (una lámina anterior, la misma ventana). La imagen se guarda igual, pero no se revisa ni se le pasa el OCR otra vez. Si el cambio era pequeño pero importante (un dato en una tabla), está en esa imagen: ábrela.
 
+## Hablantes
+
+**Salen más hablantes de los que había.** Sin saber cuántas personas hablan, la separación puede partir a alguien en dos (una voz que cambia de tono, un micrófono que se aleja). Vuelve a procesar con `--hablantes N`: solo se rehace la separación y lo que depende de ella.
+
+**Salen menos hablantes, o dos personas mezcladas.** Pasa con voces parecidas o con alguien que habla muy poco. `--hablantes N` también ayuda. Una persona que dice unas cuantas frases en toda la reunión puede quedar absorbida por quien habla junto a ella.
+
+**En audios cortos confunde más.** Para agrupar voces necesita muchas muestras de cada una. Con 90 segundos el error medido fue del doble que con la reunión completa.
+
+**Las frases dichas a la vez van a una sola persona.** Cada frase se asigna al hablante que más tiempo coincide con ella.
+
+**"Hablante 1" no es nadie.** La separación no sabe nombres. Pónselos con `minutas.py nombres "<salida>" "Hablante 1=Ana Torres"` cuando haya evidencia de quién es quién.
+
+**La primera vez tarda más.** Descarga dos modelos de GitHub (unos 46 MB en total) a la caché del plugin: `%LOCALAPPDATA%\minutas-video\modelos` en Windows, `~/.cache/minutas-video/modelos` en macOS y Linux (o `MINUTAS_MODELOS`).
+
 ## Texto de las capturas (OCR)
 
 **Tarda varios minutos.** El OCR corre en CPU, unos 4 s por captura de 1080p, y empieza en cuanto terminan las capturas, mientras sigue la transcripción. Para omitirlo: `--no-ocr` (o `ocr = false` en `[capturas]` de `config.toml`).

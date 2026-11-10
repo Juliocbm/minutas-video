@@ -5,8 +5,8 @@
 """minutas-video: procesa grabaciones de punta a punta y lleva el registro de cada paso.
 
   minutas.py procesar <grabación|transcripción|carpeta> [...] [opciones]
-      Transcripción (Whisper o importada), capturas, texto de las capturas (OCR), glosario y
-      transcripción ilustrada. Lo que ya está hecho con los mismos parámetros no se repite: si algo
+      Transcripción (Whisper o importada), separación de hablantes, capturas, texto de las capturas
+      (OCR), glosario y transcripción ilustrada. Lo que ya está hecho con los mismos parámetros no se repite: si algo
       falla o cambias una opción, vuelve a correr el mismo comando y solo se rehace lo necesario.
   minutas.py procesar <grabación> --plan
       Muestra en JSON qué haría y con qué configuración, sin correr nada.
@@ -19,6 +19,9 @@
   minutas.py minuta <salida>
       Valida minuta.json, verifica cada cita contra la transcripción y el texto de las capturas, y
       genera minuta.md.
+  minutas.py nombres <salida> "Hablante 1=Ana Torres" ...
+      Pone nombre a los hablantes de la separación automática (en el .txt, el .srt y, al volver a
+      procesar, en la transcripción ilustrada).
   minutas.py exportar <salida> [pdf] [docx] [csv]
       La minuta para compartir: minuta.pdf, minuta.docx y pendientes.csv (por defecto, los tres).
 
@@ -44,7 +47,8 @@ import config as cfgmod
 import exportar as expmod
 import glosario as glosmod
 import minuta as minmod
-from comun import PREFIJO_PROGRESO, VERSION, configurar_consola, escribir_json, hms, leer_json, leer_transcripcion
+from comun import (PREFIJO_PROGRESO, VERSION, configurar_consola, escribir_json, hms, leer_json, leer_transcripcion,
+                   reescribir_derivados)
 from entorno import recomendar
 
 DIR = Path(__file__).resolve().parent
@@ -52,21 +56,21 @@ EXT_VIDEO = {".mp4", ".mkv", ".mov", ".webm", ".avi", ".m4v", ".wmv", ".flv", ".
 EXT_AUDIO = {".m4a", ".mp3", ".wav", ".ogg", ".opus", ".flac", ".aac", ".wma"}
 EXT_TRANSCRIPCION = {".vtt", ".srt"}
 
-PASOS = ("transcripcion", "capturas", "ocr", "glosario", "html")
-NOMBRE = {"transcripcion": "transcripción", "capturas": "capturas", "ocr": "texto de las capturas",
-          "glosario": "glosario", "html": "transcripción ilustrada"}
-SALIDA_DE = {"transcripcion": "transcripcion.json", "capturas": "capturas.json", "ocr": "ocr.json",
-             "glosario": "glosario.json", "html": "transcripcion-ilustrada.html"}
-DEPENDE = {"transcripcion": (), "capturas": (), "ocr": ("capturas",), "glosario": ("transcripcion",),
-           "html": ("transcripcion", "capturas", "ocr", "glosario")}
+PASOS = ("transcripcion", "hablantes", "capturas", "ocr", "glosario", "html")
+NOMBRE = {"transcripcion": "transcripción", "hablantes": "hablantes", "capturas": "capturas",
+          "ocr": "texto de las capturas", "glosario": "glosario", "html": "transcripción ilustrada"}
+SALIDA_DE = {"transcripcion": "transcripcion.json", "hablantes": "hablantes.json", "capturas": "capturas.json",
+             "ocr": "ocr.json", "glosario": "glosario.json", "html": "transcripcion-ilustrada.html"}
+DEPENDE = {"transcripcion": (), "hablantes": (), "capturas": (), "ocr": ("capturas",), "glosario": ("transcripcion",),
+           "html": ("transcripcion", "hablantes", "capturas", "ocr", "glosario")}
 # Subir la versión de un paso hace que se rehaga en las reuniones ya procesadas.
-VERSION_PASO = {"transcripcion": 1, "capturas": 2, "ocr": 1, "glosario": 1, "html": 3}
-EXTERNOS = ("transcripcion", "capturas", "ocr")  # pasos que corren en su propio proceso, en paralelo
-OPCIONALES = ("ocr",)  # si fallan, lo que depende de ellos se hace igual, sin su resultado
+VERSION_PASO = {"transcripcion": 1, "hablantes": 1, "capturas": 2, "ocr": 1, "glosario": 1, "html": 3}
+EXTERNOS = ("transcripcion", "hablantes", "capturas", "ocr")  # cada uno en su propio proceso, en paralelo
+OPCIONALES = ("ocr", "hablantes")  # si fallan, lo que depende de ellos se hace igual, sin su resultado
 HITOS = (25, 50, 75)
 # Opciones de la corrida que se recuerdan en reunion.json y se reaplican al reanudar esa reunión.
 RECORDADAS = ("preset", "idioma", "modelo", "dispositivo", "capturas", "max_capturas", "umbral_cambio",
-              "ocr", "pista", "transcripcion", "titulo", "nota", "incrustar")
+              "ocr", "hablantes", "separar_hablantes", "pista", "transcripcion", "titulo", "nota", "incrustar")
 
 
 # ───────────────────────── utilidades ─────────────────────────
@@ -161,7 +165,8 @@ def explicitas(a):
 def corrida_desde(op):
     return {"preset": op.get("preset"), "idioma": op.get("idioma"),
             "transcripcion": {"modelo": op.get("modelo"), "dispositivo": op.get("dispositivo")},
-            "capturas": {"modo": op.get("capturas"), "max": op.get("max_capturas"), "ocr": op.get("ocr")}}
+            "capturas": {"modo": op.get("capturas"), "max": op.get("max_capturas"), "ocr": op.get("ocr")},
+            "hablantes": {"separar": op.get("separar_hablantes"), "numero": op.get("hablantes")}}
 
 
 def motivo_de(paso, previo, parametros, existe):
@@ -213,6 +218,18 @@ def planear(ruta, a, rec):
                            "idioma": ef["idioma"], "pista": opciones.get("pista")},
         }
 
+    # Separar hablantes: solo si transcribe Whisper (la transcripción importada ya trae quién habla).
+    if not importada and ef["hablantes"]["separar"]:
+        args = [str(ruta), "--salida", str(salida)]
+        if opciones.get("pista") is not None:
+            args += ["--pista", str(opciones["pista"])]
+        if ef["hablantes"]["numero"]:
+            args += ["--hablantes", str(ef["hablantes"]["numero"])]
+        pasos["hablantes"] = {
+            "script": "separar_hablantes.py", "with": [], "args": args,
+            "parametros": {"archivo": identidad(ruta), "pista": opciones.get("pista"), "numero": ef["hablantes"]["numero"]},
+        }
+
     modo = ef["capturas"]["modo"] if tipo == "video" else "ninguna"
     if modo != "ninguna":
         args = [str(ruta), "--salida", str(salida), "--modo", modo, "--max", str(ef["capturas"]["max"])]
@@ -246,10 +263,12 @@ def planear(ruta, a, rec):
         html.append("--sin-capturas")
     if "ocr" not in pasos:
         html.append("--sin-ocr")
+    nombres = (leer_json(salida / "hablantes.json", {}) or {}).get("nombres") or {}
     pasos["html"] = {"script": "armar_html.py", "with": [], "args": html,
                      "parametros": {"titulo": opciones.get("titulo") or "", "nota": opciones.get("nota") or "",
                                     "incrustar": bool(opciones.get("incrustar")),
-                                    "capturas": "capturas" in pasos, "ocr": "ocr" in pasos}}
+                                    "capturas": "capturas" in pasos, "ocr": "ocr" in pasos,
+                                    "hablantes": "hablantes" in pasos, "nombres": nombres}}
 
     previos = previo.get("pasos", {})
     solo, forzar = a.solo or set(), a.forzar or set()
@@ -460,6 +479,10 @@ def resumen_de(paso, salida):
         if meta.get("hablantes"):
             partes.append("hablantes: " + ", ".join(meta["hablantes"]))
         return " · ".join(partes)
+    if paso == "hablantes":
+        meta = (leer_json(salida / "hablantes.json", {}) or {}).get("meta", {})
+        n = len(meta.get("hablantes", []))
+        return f"{n} {'hablante' if n == 1 else 'hablantes'} · separación automática, sin nombres"
     if paso == "capturas":
         datos = leer_json(salida / "capturas.json", {}) or {}
         capturas = datos.get("capturas", [])
@@ -507,6 +530,12 @@ def ejecutar(plan, uv, tty):
     for paso in ("capturas", "ocr"):  # ya no aplican: el HTML los ignora (--sin-capturas, --sin-ocr)
         if paso not in plan["pasos"]:
             manifiesto["pasos"].pop(paso, None)
+    if "hablantes" not in plan["pasos"]:  # se apagó la separación: que el .txt y el HTML queden sin ella
+        manifiesto["pasos"].pop("hablantes", None)
+        if (salida / "hablantes.json").exists():
+            (salida / "hablantes.json").unlink()
+            if (salida / "transcripcion.json").exists():
+                reescribir_derivados(salida)
 
     def guardar():
         manifiesto["actualizado"] = ahora()
@@ -579,6 +608,11 @@ def ejecutar(plan, uv, tty):
             pantalla.latido()
             time.sleep(0.2)
 
+        # Los hablantes de la separación van al .txt y al .srt cuando cambia cualquiera de los dos.
+        hechos = {"transcripcion", "hablantes"} & set(correr)
+        if hechos and (salida / "hablantes.json").exists() and (salida / "transcripcion.json").exists():
+            reescribir_derivados(salida)
+
         for paso in ("glosario", "html"):
             if paso not in correr or bloqueado(paso):
                 continue
@@ -618,6 +652,33 @@ def ejecutar(plan, uv, tty):
     else:
         pantalla.linea(f"LISTO · {salida}")
     return not fallidos
+
+
+# ───────────────────────── nombres ─────────────────────────
+
+def poner_nombres(salida, asignaciones):
+    ruta = salida / "hablantes.json"
+    datos = leer_json(ruta)
+    if not datos:
+        raise SystemExit(f"No hay {ruta}: esta reunión no tiene separación automática de hablantes.")
+    etiquetas = sorted(datos.get("meta", {}).get("hablantes", []), key=lambda h: int(h.split()[-1]))
+    nombres = dict(datos.get("nombres") or {})
+    for asignacion in asignaciones:
+        etiqueta, _, nombre = asignacion.partition("=")
+        etiqueta, nombre = etiqueta.strip(), nombre.strip()
+        if etiqueta not in etiquetas:
+            raise SystemExit(f"«{etiqueta}» no existe. Hablantes: {', '.join(etiquetas)}.")
+        if nombre:
+            nombres[etiqueta] = nombre
+        else:
+            nombres.pop(etiqueta, None)  # «Hablante 2=» quita el nombre
+    datos["nombres"] = nombres
+    escribir_json(ruta, datos)
+    reescribir_derivados(salida)
+    print("Nombres: " + (", ".join(f"{k} = {v}" for k, v in sorted(nombres.items())) or "ninguno"))
+    print("Actualizados transcripcion.txt y .srt. Para la transcripción ilustrada, vuelve a correr "
+          "`minutas.py procesar` con la grabación: solo se rehace el HTML.")
+    return 0
 
 
 # ───────────────────────── seguir ─────────────────────────
@@ -672,6 +733,9 @@ def main():
     pp.add_argument("--umbral-cambio", type=float)
     pp.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=None,
                     help="leer el texto de las capturas (por defecto, sí)")
+    pp.add_argument("--separar-hablantes", action=argparse.BooleanOptionalAction, default=None,
+                    help="separar quién habla cuando transcribe Whisper (por defecto, según el preset)")
+    pp.add_argument("--hablantes", type=int, help="cuántas personas hablan, si se sabe (mejora la separación)")
     pp.add_argument("--pista", type=int, help="pista de audio, si la grabación tiene varias")
     pp.add_argument("--transcripcion", help=".vtt/.srt de la plataforma en lugar de Whisper; 'whisper' para volver a Whisper")
     pp.add_argument("--titulo")
@@ -695,6 +759,10 @@ def main():
 
     pm = sub.add_parser("minuta", help="valida minuta.json, verifica la evidencia y genera minuta.md")
     pm.add_argument("salida")
+
+    pn = sub.add_parser("nombres", help="pone nombre a los hablantes de la separación automática")
+    pn.add_argument("salida")
+    pn.add_argument("asignaciones", nargs="+", help='"Hablante 1=Ana Torres" …')
 
     pe = sub.add_parser("exportar", help="exporta la minuta a PDF, Word y CSV de pendientes")
     pe.add_argument("salida")
@@ -725,6 +793,9 @@ def main():
 
     if a.comando == "minuta":
         sys.exit(minmod.comando(Path(a.salida)))
+
+    if a.comando == "nombres":
+        sys.exit(poner_nombres(Path(a.salida), a.asignaciones))
 
     if a.comando == "exportar":
         malos = [f for f in a.formatos if f not in expmod.FORMATOS]

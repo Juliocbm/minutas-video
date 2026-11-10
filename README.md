@@ -37,7 +37,7 @@
 
 Le pasas a Claude la grabación de una junta y te devuelve:
 
-- **La transcripción** con marcas de tiempo (`.txt` y `.srt`), hecha en tu máquina.
+- **La transcripción** con marcas de tiempo (`.txt` y `.srt`), hecha en tu máquina, con **quién habla** en cada momento («Hablante 1», «Hablante 2»…, o sus nombres cuando hay evidencia).
 - **Capturas** automáticas cada vez que cambia lo que se muestra en pantalla, con **su texto** (OCR) para buscarlo y citarlo. Si la pantalla vuelve a algo ya visto, la captura queda marcada como repetida.
 - **Una transcripción ilustrada** en HTML: cada captura junto a lo que se dijo mientras estuvo visible. Así "como ven aquí…" vuelve a tener sentido. Se puede buscar en lo dicho y en pantalla, filtrar por hablante y, con un clic en cualquier frase, escuchar ese momento de la grabación.
 - **Una minuta** con acuerdos, temas y pendientes, cada uno con su minuto, su captura y la cita textual que lo respalda. Antes de entregarla, cada cita se verifica contra la transcripción, y cada minuto enlaza a la frase exacta. Si le das documentos relacionados, señala qué cambió la reunión respecto a lo escrito.
@@ -110,6 +110,7 @@ Si falta algo por decidir, Claude te lo pregunta en una sola ventana de opciones
 | Salida (en `<grabación>_minuta/`) | Lo genera |
 |---|---|
 | `transcripcion.txt` · `.srt` · `.json` | Whisper, en local |
+| `hablantes.json` | Separación de hablantes con sherpa-onnx, en local |
 | `capturas/` · `capturas.json` | Comparación de imágenes, en local |
 | `capturas.txt` · `ocr.json` | OCR del texto de cada captura, en local |
 | `glosario.json` | Búsqueda de los términos del glosario, en local |
@@ -137,13 +138,19 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md). Los scripts tambi�
 | **Claude Code** | Para usarlo como plugin |
 | **GPU NVIDIA** (opcional) | Unos 5 min por hora de audio con el modelo large-v3. Requiere un driver reciente; las librerías CUDA se instalan solas |
 | **Sin GPU** | Funciona en CPU con modelos más chicos (medium o small) |
-| **Espacio** | ~3 GB para el modelo large-v3, ~1.5 GB para las librerías CUDA y ~260 MB para el OCR, descargados una vez |
+| **Espacio** | ~3 GB para el modelo large-v3, ~1.5 GB para las librerías CUDA, ~260 MB para el OCR y ~100 MB para separar hablantes, descargados una vez |
 
 Probado en Windows 11 con GPU NVIDIA. Los scripts son multiplataforma, pero macOS y Linux aún no se han probado ([backlog](BACKLOG.md)).
 
 ## Quién dijo qué
 
-Whisper recibe el audio ya mezclado y no distingue voces. Si la plataforma generó una transcripción con nombres (Teams, Zoom y Meet pueden exportar `.vtt`), dásela junto con el video: la skill la importa con los hablantes exactos. La separación automática de voces está en el [backlog](BACKLOG.md).
+Whisper recibe el audio ya mezclado y no distingue voces. Por eso el plugin separa a los hablantes por su cuenta, en tu CPU y sin cuentas ni tokens: usa [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) con el modelo de segmentación de pyannote y un modelo de voces que se descargan de GitHub la primera vez (unos 46 MB).
+
+- El resultado es «Hablante 1», «Hablante 2»…: la separación no sabe nombres. Claude se los pone cuando hay evidencia (alguien se presenta, lo llaman por su nombre, aparece en el mosaico) y lo marca como deducido.
+- Medido con el corpus público AMI (reuniones reales de cuatro personas), el error de diarización fue del 23 %, y solo el 7 % es confusión entre personas; el resto es habla encimada. Como referencia, pyannote community-1, que requiere cuenta de Hugging Face, publica 17 % en las mismas condiciones.
+- Funciona mejor en reuniones de más de unos 10 minutos: necesita muchas muestras de cada voz.
+
+Si la plataforma generó una transcripción con nombres (Teams, Zoom y Meet pueden exportar `.vtt`), dásela junto con el video: trae los hablantes exactos y la separación automática no hace falta.
 
 ## Configuración
 
@@ -192,6 +199,7 @@ La transcripción queda fiel al audio: forzar el vocabulario dentro de Whisper l
 
 ```bash
 uv run pytest                                          # pruebas de los scripts (sin Whisper)
+uv run --script dev/medir_hablantes.py <carpeta AMI>   # error de la separación de hablantes contra AMI
 claude plugin eval . --allow-tools Write Edit Bash --scaffold   # evaluaciones de la skill (Claude Code 2.1.269+)
 ```
 

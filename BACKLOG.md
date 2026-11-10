@@ -2,14 +2,11 @@
 
 Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aquí y se anota en el [CHANGELOG](CHANGELOG.md).
 
-## 0.4 · Quién dijo qué
+## 0.4.x · Quién dijo qué (seguimiento)
 
-- **Separar hablantes, sin cuentas por defecto.** El resultado es "Hablante 1, Hablante 2…"; los nombres se siguen deduciendo con evidencia, y el `.vtt` de la plataforma, cuando existe, sigue siendo mejor.
-  - **Por defecto, sherpa-onnx:** el modelo de segmentación de pyannote 3.0 convertido (MIT) y un modelo de voces (3D-Speaker, NeMo o WeSpeaker), descargados de GitHub sin registro. Corre en CPU y recibe el audio que ya decodifica PyAV.
-  - **Opcional, pyannote community-1:** para quien quiera más precisión. Sus modelos en Hugging Face piden cuenta, aceptar condiciones y token (verificado el 2026-11-09), así que cada usuario lo activa a propósito: el token va en `userConfig` como dato sensible.
-  - **Decidir con datos.** Medir con el corpus AMI (reuniones reales de 3 a 5 personas, anotadas por hablante, CC BY 4.0): error de hablantes y tiempo. pyannote se compara solo si hay un token de Hugging Face para la prueba (cuenta del desarrollador, una vez); si sherpa-onnx queda cerca o no hay token, pyannote no entra. El audio comprimido de videollamada se revisa a ojo con una grabación propia de OBS. Un `.vtt` de Teams, si aparece, sirve como segunda medición.
-  - Cada palabra se asigna a un hablante con las marcas de tiempo por palabra de faster-whisper.
-- **Ajustes de calidad de Whisper.** Marcas de tiempo por palabra, `hallucination_silence_threshold` y tramos de baja confianza marcados en el HTML. Solo si las pruebas muestran mejora.
+- **Hablantes palabra por palabra.** Hoy cada frase de Whisper va completa a un hablante; si Whisper juntó a dos personas en una frase («…¿no? Así es…»), la respuesta queda con quien preguntó. Con las marcas de tiempo por palabra de faster-whisper, cada palabra iría a su hablante y las frases se partirían en el cambio.
+- **pyannote como opción.** Solo si alguien lo pide y acepta la cuenta de Hugging Face: sherpa-onnx dio 23.1 % contra 17.0 % publicado por pyannote, y la diferencia es sobre todo habla encimada.
+- **Ajustes de calidad de Whisper.** `hallucination_silence_threshold` y tramos de baja confianza marcados en el HTML. Solo si las pruebas muestran mejora.
 - **Plantillas por tipo de reunión:** general, requisitos con proveedor, seguimiento, daily, retrospectiva, entrevista, capacitación. Cada proyecto puede agregar las suyas.
 
 ## 0.5 · Especialistas

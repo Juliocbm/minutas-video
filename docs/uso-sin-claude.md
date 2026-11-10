@@ -26,6 +26,7 @@ Opciones frecuentes:
 | `--pista 1` | Elegir la pista de audio, si la grabación tiene varias |
 | `--capturas ninguna` | `pantalla`, `camara` o `ninguna` |
 | `--no-ocr` | No leer el texto de las capturas (ahorra unos 4 s por captura) |
+| `--hablantes 4` · `--no-separar-hablantes` | Cuántas personas hablan, si se sabe (separa mejor); o no separar hablantes |
 | `--nota "…"` · `--titulo "…"` · `--incrustar` | Para la transcripción ilustrada |
 | `--solo html` · `--forzar transcripcion` | Correr solo algunos pasos, o rehacer uno aunque esté al día |
 | `--plan` | Ver en JSON qué haría y con qué configuración, sin correr nada |
@@ -36,6 +37,7 @@ Otros comandos:
 uv run --script minutas.py seguir "reunion_minuta"   # barra de progreso de un proceso en curso
 uv run --script minutas.py config                     # configuración efectiva y de dónde sale cada valor
 uv run --script minutas.py glosario "reunion_minuta"  # vuelve a buscar los términos del glosario
+uv run --script minutas.py nombres "reunion_minuta" "Hablante 1=Ana Torres"   # nombre para un hablante
 uv run --script minutas.py minuta "reunion_minuta"    # valida minuta.json, verifica las citas y genera minuta.md
 uv run --script minutas.py exportar "reunion_minuta"  # minuta.pdf, minuta.docx y pendientes.csv (o solo los que indiques)
 ```
@@ -49,6 +51,7 @@ uv run --script entorno.py                                                     #
 uv run --with nvidia-cublas-cu12 --with "nvidia-cudnn-cu12>=9,<10" --script transcribir.py "reunion.mkv" --salida "reunion_minuta"
 uv run --script transcribir.py "reunion.mkv" --salida "reunion_minuta" --modelo medium --dispositivo cpu   # sin GPU
 uv run --script importar_transcripcion.py "reunion.vtt" --salida "reunion_minuta"
+uv run --script separar_hablantes.py "reunion.mkv" --salida "reunion_minuta" --hablantes 4   # quién habla (CPU)
 uv run --script extraer_capturas.py "reunion.mkv" --salida "reunion_minuta" --modo pantalla
 uv run --script ocr_capturas.py "reunion_minuta"                               # texto de las capturas
 uv run --script armar_html.py "reunion_minuta" --titulo "Revisión semanal"

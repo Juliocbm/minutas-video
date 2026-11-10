@@ -6,6 +6,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [0.4.0] - 2026-11-10
+
+Quién dijo qué: separación automática de hablantes, sin cuentas.
+
+### Añadido
+- Separación de hablantes cuando transcribe Whisper (`separar_hablantes.py`), con sherpa-onnx en CPU: el modelo de segmentación de pyannote 3.0 y el modelo de voces TitaNet small, descargados de GitHub la primera vez, sin cuentas ni tokens. Corre en paralelo con la transcripción, unas 9 veces más rápido que la duración del audio.
+  - Cada frase recibe el hablante con el que más se traslapa, y `transcripcion.txt`, `.srt` y la transcripción ilustrada (con su filtro por hablante) salen con «Hablante 1», «Hablante 2»…
+  - Los "hablantes" de menos de 15 s (o del 2 % del habla) se reasignan al turno vecino: casi siempre son pedazos de otra persona.
+  - `minutas.py nombres <salida> "Hablante 1=Ana Torres"` les pone nombre cuando hay evidencia; la skill lo hace al identificar a los participantes.
+  - `--hablantes N` y `--no-separar-hablantes`, y `[hablantes]` en `config.toml`. El preset `rapido` no separa.
+- `dev/medir_hablantes.py`: mide la separación contra el corpus AMI con el protocolo que publica pyannote. Resultado: 23.1 % de error en cuatro reuniones (6.8 % de confusión entre personas), contra 17.0 % que publica pyannote community-1.
+- Prueba con 90 segundos reales de una reunión de AMI (CC BY 4.0, en `tests/datos/`).
+
+### Cambiado
+- La skill identifica a los participantes sobre los hablantes separados y dice de dónde salieron los nombres.
+
 ## [0.3.1] - 2026-11-09
 
 Ver y compartir: la grabación dentro de la transcripción ilustrada y la minuta en PDF, Word y CSV.
@@ -97,7 +113,8 @@ Cimientos: un proceso que se reanuda, configuración por proyecto, avance visibl
 ### Notas
 - No se le pasa vocabulario a Whisper. En pruebas, `hotwords` hizo que repitiera la lista de términos, inventara frases en otros idiomas y perdiera la mitad del contenido. El vocabulario del proyecto se usa para corregir términos en la minuta.
 
-[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.1...HEAD
+[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.4.0...HEAD
+[0.4.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.1...minutas-video--v0.4.0
 [0.3.1]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.0...minutas-video--v0.3.1
 [0.3.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.2.0...minutas-video--v0.3.0
 [0.2.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.1.0...minutas-video--v0.2.0
