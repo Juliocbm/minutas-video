@@ -2,7 +2,7 @@
 
 Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aquí y se anota en el [CHANGELOG](CHANGELOG.md).
 
-**Regla:** todo cambio que toque la minuta se mide de punta a punta antes de publicarse: la misma reunión real, en una sesión limpia, con la versión publicada y la nueva, calificadas a ciegas contra una lista de hechos, más el tiempo y el costo de cada una. Medir piezas sueltas no basta: así entraron el OCR y la separación de hablantes, que no mejoraron la minuta (ver la 0.5.0 en el CHANGELOG).
+**Regla:** todo cambio que toque la minuta se mide de punta a punta antes de publicarse: la misma reunión real, en una sesión limpia, con la versión publicada y la nueva, calificadas a ciegas contra una lista de hechos, más el tiempo y el costo de cada una. Las herramientas y los pasos están en [`dev/medir-minuta/`](dev/medir-minuta/LEEME.md). Medir piezas sueltas no basta: así entraron el OCR y la separación de hablantes, que no mejoraron la minuta (ver la 0.5.0 en el CHANGELOG).
 
 ## 0.5.x · Seguimiento
 

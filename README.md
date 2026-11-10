@@ -200,6 +200,7 @@ La transcripción queda fiel al audio: forzar el vocabulario dentro de Whisper l
 ```bash
 uv run pytest                                          # pruebas de los scripts (sin Whisper)
 uv run --script dev/medir_hablantes.py <carpeta AMI>   # error de la separación de hablantes contra AMI
+python dev/medir-minuta/correr.py --video <junta> ...   # minuta de dos versiones, de punta a punta (ver su LEEME)
 claude plugin eval . --allow-tools Write Edit Bash --scaffold   # evaluaciones de la skill (Claude Code 2.1.269+)
 ```
 

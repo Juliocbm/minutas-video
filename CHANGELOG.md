@@ -6,6 +6,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Añadido
+- `dev/medir-minuta/`, para comparar la minuta de dos versiones con la misma reunión, como se midió la 0.5.0: procesa la reunión con cada versión en una sesión limpia (`claude -p` que no se cierra al primer turno, con el plugin instalado desactivado), anota tiempo y costo, resume cada sesión (costo por turno, imágenes abiertas) y arma la calificación a ciegas contra una lista de hechos. Los datos de las reuniones quedan fuera del repositorio.
+
 ## [0.5.0] - 2026-11-10
 
 De vuelta a lo que funciona. Se comparó la minuta de la 0.4 (sin publicar) contra la de la 0.1 con dos reuniones reales, en sesiones limpias y con calificación a ciegas contra una lista de hechos: la exactitud quedó empatada (una reunión la ganó cada versión), la 0.4 tardaba de 8 a 13 minutos más y, al apoyarse en el texto del OCR, Claude dejó de mirar las pantallas. La 0.5 recupera el flujo de la 0.1 y conserva lo que no cuesta tiempo ni tokens.
