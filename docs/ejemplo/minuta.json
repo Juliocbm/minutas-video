@@ -1,0 +1,91 @@
+{
+ "version": 1,
+ "plantilla": "completa",
+ "titulo": "Revisión de lanzamiento de Mesa Lista",
+ "nota": "**Ejemplo ficticio.** Proyecto, personas y datos inventados para mostrar lo que produce el plugin. Claude redacta minuta.json a partir de la transcripción y las capturas; minuta.md se genera de ahí con `minutas.py minuta`.",
+ "fecha": "2026-11-12",
+ "hora": "10:00",
+ "lugar": "videollamada",
+ "objetivo": "revisar la beta y decidir la fecha de lanzamiento de la app de reservas.",
+ "participantes": [
+  {"nombre": "Ana Torres", "rol": "dirige la revisión", "organizacion": "Producto"},
+  {"nombre": "Luis Méndez", "rol": "backend", "organizacion": "Desarrollo"},
+  {"nombre": "Sofía Ramírez", "organizacion": "Diseño"}
+ ],
+ "acuerdos": [
+  {
+   "tema": "Error de SMS",
+   "texto": "Reintentar el envío una vez a los 30 s; si vuelve a fallar, mandar la confirmación por correo.",
+   "evidencia": [
+    {"t": "02:42", "cita": "Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo"},
+    {"t": "03:00", "cita": "Queda acordado: reintento y respaldo por correo", "captura": 3}
+   ]
+  },
+  {
+   "tema": "Pantalla de reserva",
+   "texto": "Subir el botón \"Confirmar reserva\" debajo del selector de personas y dejarlo fijo. Es solo un cambio de interfaz; no toca la API.",
+   "evidencia": [
+    {"t": "03:25", "cita": "subirlo justo debajo del selector de personas y dejarlo fijo", "captura": 4},
+    {"t": "03:55", "cita": "es solo de la interfaz, no toca la API"}
+   ]
+  },
+  {
+   "tema": "Lanzamiento",
+   "texto": "**27 de noviembre**, condicionado a que el reintento de SMS esté listo el 18. Si no está, se mueve una semana.",
+   "evidencia": [
+    {"t": "04:45", "cita": "Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre", "captura": 5},
+    {"t": "05:06", "cita": "Movemos el lanzamiento una semana"}
+   ],
+   "discusion": [
+    "Luis preguntó qué pasaría si el reintento no estaba listo; Ana prefirió mover la fecha antes que lanzar con clientes sin confirmación."
+   ]
+  },
+  {
+   "tema": "Seguimiento",
+   "texto": "Revisión de estado el 19 de noviembre.",
+   "evidencia": [
+    {"t": "05:20", "cita": "revisamos el estado el diecinueve"},
+    {"t": "05:30", "cita": "Revisión el diecinueve"}
+   ]
+  }
+ ],
+ "temas": [
+  {
+   "titulo": "Métricas de la beta",
+   "desde": "00:58",
+   "hasta": "02:00",
+   "puntos": [
+    {"tipo": "dato", "texto": "Las reservas semanales subieron de 120 a 410 en seis semanas.",
+     "evidencia": [{"t": "00:58", "cita": "pasamos de ciento veinte a cuatrocientas diez reservas por semana", "captura": 2}]},
+    {"tipo": "dato", "texto": "La cancelación bajó del 15 % al 12 %.",
+     "evidencia": [{"t": "01:22", "cita": "Bajó al doce"}]},
+    {"tipo": "duda", "texto": "Se atribuye la baja al recordatorio de un día antes, pero **no se ha medido por separado**.", "quien": "Ana",
+     "evidencia": [{"t": "01:22", "cita": "no lo hemos medido por separado"}]},
+    {"tipo": "propuesta", "texto": "Medirlo antes de cambiar nada; quedó como pendiente de Ana.", "quien": "Sofía",
+     "evidencia": [{"t": "01:36", "cita": "Propongo medirlo antes de cambiar nada"}]}
+   ]
+  },
+  {
+   "titulo": "Error en la confirmación por SMS",
+   "desde": "02:08",
+   "hasta": "03:10",
+   "puntos": [
+    {"tipo": "dato", "texto": "38 de 1 240 envíos fallaron en la última semana (3.1 %): el proveedor no responde en 10 s.",
+     "evidencia": [{"t": "02:08", "cita": "De mil doscientos cuarenta envíos, treinta y ocho fallaron"},
+                   {"t": "02:08", "cita": "38 fallos de 1 240 envíos (3.1 %)", "captura": 3}]},
+    {"texto": "Impacto: quien no recibe el SMS cree que no reservó y llama al restaurante.", "quien": "Luis",
+     "evidencia": [{"t": "02:08", "cita": "quien no recibe el SMS cree que no reservó y llama al restaurante"}]}
+   ]
+  }
+ ],
+ "pendientes": [
+  {"texto": "Reintento de SMS y respaldo por correo", "responsable": "Luis Méndez", "fecha": "18/11",
+   "evidencia": [{"t": "03:00", "cita": "reintento y respaldo por correo, Luis, antes del dieciocho"}]},
+  {"texto": "Botón de confirmar fijo debajo de \"Personas\"", "responsable": "Sofía Ramírez", "fecha": "viernes 13/11",
+   "evidencia": [{"t": "04:08", "cita": "Sofía, ¿lo puedes tener para la próxima versión de prueba?"}, {"t": "04:20", "cita": "Sí, para el viernes"}]},
+  {"texto": "Medir el efecto del recordatorio en la cancelación", "responsable": "Ana Torres",
+   "evidencia": [{"t": "01:50", "cita": "lo anoto como pendiente mío"}]},
+  {"texto": "Revisión de estado para confirmar el lanzamiento", "responsable": "Todos", "fecha": "19/11",
+   "evidencia": [{"t": "05:30", "cita": "Revisión el diecinueve"}]}
+ ]
+}

@@ -32,6 +32,7 @@ dispositivo = "auto"         # auto | cuda | cpu
 [capturas]
 modo = ""                    # vacío: el del preset. pantalla | camara | ninguna
 max = 200                    # tope de capturas por grabación
+ocr = true                   # leer el texto de cada captura (unos 4 s por captura, en CPU)
 ```
 
 ## Presets

@@ -49,7 +49,7 @@ DEFECTOS = {
     "preset": "estandar",
     "idioma": "es",
     "transcripcion": {"modelo": "", "dispositivo": "auto"},
-    "capturas": {"modo": "", "max": 200},
+    "capturas": {"modo": "", "max": 200, "ocr": True},
 }
 
 # Esquema: clave -> (tipo, valores permitidos o None). Las tablas anidadas son dicts.
@@ -57,7 +57,7 @@ ESQUEMA = {
     "preset": (str, set(PRESETS)),
     "idioma": (str, None),
     "transcripcion": {"modelo": (str, None), "dispositivo": (str, {"auto", "cuda", "cpu"})},
-    "capturas": {"modo": (str, {"", "pantalla", "camara", "ninguna"}), "max": (int, None)},
+    "capturas": {"modo": (str, {"", "pantalla", "camara", "ninguna"}), "max": (int, None), "ocr": (bool, None)},
 }
 
 
@@ -105,8 +105,10 @@ def _validar(datos, esquema, ruta, errores, prefijo=""):
             limpio[clave] = _validar(valor, regla, ruta, errores, f"{nombre}.")
             continue
         tipo, permitidos = regla
-        if not isinstance(valor, tipo) or isinstance(valor, bool):
-            errores.append(f"{ruta}: «{nombre}» debe ser {'texto' if tipo is str else 'un número entero'}.")
+        # bool es subclase de int: true no debe pasar por número, ni 1 por true.
+        if not isinstance(valor, tipo) or (tipo is not bool and isinstance(valor, bool)):
+            esperado = {str: "texto", int: "un número entero", bool: "true o false"}[tipo]
+            errores.append(f"{ruta}: «{nombre}» debe ser {esperado}.")
             continue
         if permitidos is not None and valor not in permitidos:
             opciones = ", ".join(sorted(p or '""' for p in permitidos))

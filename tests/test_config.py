@@ -52,17 +52,25 @@ def test_la_corrida_manda_sobre_todo(capas):
     proyecto, escribir = capas
     escribir("proyecto", "config.toml", '[capturas]\nmodo = "camara"\n')
     cfg = config.cargar(proyecto, {"capturas": {"modo": "ninguna", "max": None}}, REC_GPU)
-    assert cfg["efectiva"]["capturas"] == {"modo": "ninguna", "max": 200}
+    assert cfg["efectiva"]["capturas"] == {"modo": "ninguna", "max": 200, "ocr": True}
     assert cfg["origen"]["capturas.modo"] == "corrida"
 
 
 def test_errores_claros(capas):
     proyecto, escribir = capas
-    escribir("proyecto", "config.toml", 'preset = "turbo"\nmodelo = "x"\n[capturas]\nmax = "mucho"\n')
+    escribir("proyecto", "config.toml", 'preset = "turbo"\nmodelo = "x"\n[capturas]\nmax = "mucho"\nocr = 1\n')
     errores = config.cargar(proyecto)["errores"]
     assert any("preset" in e and "turbo" in e for e in errores)
     assert any("clave desconocida «modelo»" in e for e in errores)
     assert any("capturas.max" in e and "entero" in e for e in errores)
+    assert any("capturas.ocr" in e and "true o false" in e for e in errores)
+
+
+def test_ocr_desactivado(capas):
+    proyecto, escribir = capas
+    escribir("usuario", "config.toml", '[capturas]\nocr = false\n')
+    cfg = config.cargar(proyecto, None, REC_GPU)
+    assert cfg["efectiva"]["capturas"]["ocr"] is False and cfg["origen"]["capturas.ocr"] == "usuario"
 
 
 def test_toml_roto(capas):

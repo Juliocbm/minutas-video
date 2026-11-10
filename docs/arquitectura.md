@@ -21,20 +21,28 @@ flowchart LR
     W --> T[(transcripcion.json)]
     I --> T
     C --> K[(capturas.json<br/>capturas/)]
+    K --> OC[ocr_capturas.py<br/>RapidOCR]
+    OC --> OJ[(ocr.json<br/>capturas.txt)]
     T --> GL[glosario<br/>variantes y menciones]
     GL --> GJ[(glosario.json)]
     T --> H[armar_html.py]
     K --> H
+    OJ --> H
     GJ --> H
     H --> HTML[transcripción<br/>ilustrada]
     O -.-> R[(reunion.json<br/>progreso.json<br/>_registro/)]
     T --> CL{{Claude}}
     K --> CL
+    OJ --> CL
     GJ --> CL
-    CL --> M[minuta.md<br/>contexto-*.md]
+    CL --> MJ[(minuta.json<br/>contexto-*.md)]
+    MJ --> MV{{minutas.py minuta<br/>verifica las citas}}
+    T --> MV
+    OJ --> MV
+    MV --> M[minuta.md]
 ```
 
-`minutas.py` corre la transcripción y las capturas en paralelo, cada una en un proceso aparte con sus propias dependencias. Después corre el glosario (en el mismo proceso, sin dependencias) y la transcripción ilustrada.
+`minutas.py` corre la transcripción y las capturas en paralelo, cada una en un proceso aparte con sus propias dependencias. En cuanto terminan las capturas, arranca el OCR mientras sigue la transcripción. Después corre el glosario (en el mismo proceso, sin dependencias) y la transcripción ilustrada. Un fallo del OCR no detiene el HTML: sale sin el texto de las capturas.
 
 ## Qué es IA y qué no
 
@@ -44,8 +52,10 @@ flowchart LR
 | `minutas.py` (orquestador, glosario) | No es IA: ordena pasos y busca texto | En tu máquina | Gratis |
 | `importar_transcripcion.py` | No es IA: lee subtítulos | En tu máquina | Gratis |
 | `extraer_capturas.py` | No es IA: compara imágenes | En tu máquina | Gratis |
+| `ocr_capturas.py` (RapidOCR) | IA de reconocimiento de texto en imágenes | En tu máquina (CPU) | Gratis; el modelo viene en el paquete |
+| `minutas.py minuta` | No es IA: valida, busca cada cita y arma el Markdown | En tu máquina | Gratis |
 | `hojas_contacto.py`, `armar_html.py` | No es IA: arma archivos | En tu máquina | Gratis |
-| Minuta y contexto | IA (Claude): entiende, sintetiza y contrasta | En la nube (Anthropic) | Usa tu plan de Claude |
+| `minuta.json` y contexto | IA (Claude): entiende, sintetiza y contrasta | En la nube (Anthropic) | Usa tu plan de Claude |
 
 Whisper convierte audio en texto, pero no entiende la reunión. La parte que distingue acuerdos de propuestas, corrige términos y cruza lo dicho con lo que se veía la hace Claude. Por eso el plugin funciona dentro de Claude Code. Los scripts también se pueden usar solos: ver [uso sin Claude](uso-sin-claude.md).
 
@@ -60,6 +70,9 @@ Whisper convierte audio en texto, pero no entiende la reunión. La parte que dis
 - **El avance como protocolo.** Los scripts largos imprimen líneas `@progreso {json}` cuando los corre `minutas.py`. El orquestador las convierte en barras (si hay terminal), en hitos de texto (si no la hay, como cuando lo lanza Claude), en `progreso.json` y en `_registro/hitos.log`. Claude sigue ese archivo con la herramienta Monitor y avisa en cada hito, sin leer cada línea.
 - **Configuración por capas en TOML.** Valores del plugin, preset, usuario (`~/.minutas-video/`), proyecto (`.minutas-video/`, buscado hacia arriba) y corrida. Un valor fijado en un archivo manda sobre el preset. Los errores detienen el proceso con el archivo y la clave, en lugar de ignorarse.
 - **El glosario no reescribe la transcripción.** Anota dónde aparece cada variante mal escrita y deja el texto fiel al audio. La corrección se hace en la minuta, con evidencia, y el HTML lleva la nota.
+- **Pantallas repetidas por SSIM, sin hash perceptual.** Con una reunión real, las repeticiones dieron una similitud estructural de 0.98 a 0.996 y la pantalla distinta más parecida, 0.95; el hash perceptual daba 3 bits de distancia entre páginas distintas de un mismo documento. La captura repetida se guarda igual, para que un cambio pequeño (un dato en una tabla) no se pierda: solo se evita revisarla y leerla dos veces.
+- **OCR en CPU con el modelo del paquete.** RapidOCR 3.10 trae PP-OCRv6 multilingüe (incluye español), así que no descarga modelos ni hace falta un respaldo. Los ajustes por defecto fueron los mejores: reducir la imagen o agrandar los lotes perdía texto o tardaba más. Para leer, `capturas.txt` muestra solo lo nuevo de cada captura: en la reunión real, el 30 % de las líneas.
+- **La minuta como datos.** Claude escribe `minuta.json` y un script genera `minuta.md`. Así la evidencia de cada acuerdo es verificable por una máquina: la cita se busca cerca de su momento (con tolerancia a muletillas omitidas, saltos con «…» y términos del glosario) y se reporta lo que no cuadra. El mismo archivo servirá para exportar a otros formatos sin volver a redactar.
 
 ## Dónde quedan las cosas
 

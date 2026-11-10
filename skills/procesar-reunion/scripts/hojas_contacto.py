@@ -8,7 +8,8 @@
 """Hojas de miniaturas para revisar muchas imágenes con poco contexto (12 por hoja, con su número y tiempo).
 
   uv run hojas_contacto.py capturas <salida> [--destino <carpeta>]
-      Hojas de todas las capturas de <salida>/capturas. Por defecto escribe en <salida>/_revision/.
+      Hojas de las capturas de <salida>/capturas, sin las que repiten una pantalla anterior
+      ("igual_a" en capturas.json). Por defecto escribe en <salida>/_revision/.
   uv run hojas_contacto.py tiempos <video> --destino <carpeta> <seg> [<seg> ...]
       Hoja con cuadros del video en esos segundos (para revisar tramos sin capturas).
 
@@ -19,7 +20,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from comun import configurar_consola, hms
+from comun import configurar_consola, hms, leer_capturas
 
 COLS, FILAS, TW, TH = 3, 4, 640, 360
 
@@ -62,6 +63,10 @@ def main():
         caps = sorted((salida / "capturas").glob("*.jpg"))
         if not caps:
             raise SystemExit("No hay capturas.")
+        repetidas = {Path(c["archivo"]).name for c in leer_capturas(salida)[1] if "igual_a" in c}
+        if repetidas:
+            caps = [c for c in caps if c.name not in repetidas]
+            print(f"Se omiten {len(repetidas)} capturas que repiten una pantalla anterior.")
         items = [(f"{c.stem[:4]}  {c.stem[5:].replace('-', ':')}", Image.open(c)) for c in caps]
         hojas(items, Path(a.destino) if a.destino else salida / "_revision", "hoja")
     else:

@@ -2,17 +2,12 @@
 
 Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aquí y se anota en el [CHANGELOG](CHANGELOG.md).
 
-## 0.3 · Evidencia
+## 0.3.1 · Lo que se ve y se comparte
 
-Que todo lo visible y todo lo acordado quede como datos verificables.
+Sale de `minuta.json`, que ya existe desde la 0.3.0.
 
-- **Minuta estructurada.** Claude redacta primero `minuta.json`, la fuente única: participantes, acuerdos, propuestas, preguntas abiertas, riesgos, pendientes con responsable y fecha, y diferencias con documentos. Cada elemento lleva su evidencia (segundo, captura y cita). El Markdown y las exportaciones salen de ahí.
-- **Texto de las capturas (OCR).** RapidOCR con el modelo PP-OCRv5 Latin; como respaldo sin descargas, el OCR de Windows. El texto queda en `capturas.json`, se puede buscar en el HTML y ayuda a identificar participantes en el mosaico.
-- **Capturas sin duplicados.** Hash perceptual contra las últimas 10 capturas, confirmado con SSIM. Si la pantalla vuelve a algo ya visto (A→B→A), se marca como repetida.
 - **Transcripción ilustrada 2.0.** Reproductor del video: clic en una frase y salta a ese momento. Búsqueda con MiniSearch, filtro por hablante y enlaces `#t=` desde la minuta.
-- **Más formatos de entrada.** El `.docx` que exporta Teams, el Google Doc de Meet y el TIMELINE de Zoom.
 - **Word, PDF, CSV y calendario** generados desde `minuta.json`: pandoc o docxtpl, Edge en modo headless, icalendar (VEVENT) y CSV en `utf-8-sig`.
-- **Barra en la status line (opcional).** Un comando de status line lee `progreso.json`; `configurar` ofrece agregarlo.
 
 ## 0.4 · Quién dijo qué
 
@@ -49,5 +44,9 @@ Estos esperan una señal concreta para entrar.
 - **Perfiles de voz por proyecto**, para sugerir nombres de hablantes en juntas recurrentes. Depende de la 0.4.
 - **Recortar la pantalla compartida** en videollamadas. Primero hay que medir cuántas capturas falsas generan las cámaras.
 - **Motores de transcripción alternos:** Canary, Parakeet o VibeVoice. Solo si superan a large-v3 en juntas propias.
+- **Más formatos de entrada:** el `.docx` que exporta Teams, el Google Doc de Meet y el TIMELINE de Zoom. Hoy ya se importa el `.vtt`; entran con un caso real.
+- **Barra en la status line.** Un comando de status line que lea `progreso.json`. Los hitos al 25, 50 y 75 % y `minutas.py seguir` ya cubren el avance.
+- **OCR en GPU** (onnxruntime-gpu con las librerías CUDA que ya usa Whisper). Hoy son unos 4 s por captura en CPU, en paralelo con la transcripción; entra si alarga de forma notable el proceso.
+- **Orden de lectura del OCR por columnas.** En pantallas con dos columnas (un correo junto a un PDF), las líneas se mezclan.
 - **Panel propio en Claude Code (mod).** Solo si la status line y los hitos se quedan cortos.
 - **Transcripción en la nube.** Pospuesta: el audio saldría del equipo.

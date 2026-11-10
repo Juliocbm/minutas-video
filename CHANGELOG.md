@@ -6,6 +6,32 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [0.3.0] - 2026-11-09
+
+Evidencia: el texto de las pantallas y una minuta cuyas citas se verifican contra la grabación.
+
+### Añadido
+- Minuta estructurada: Claude escribe `minuta.json` (participantes, acuerdos, temas con sus puntos, preguntas abiertas, riesgos, pendientes y diferencias con documentos), y cada elemento lleva su evidencia: momento, cita textual y captura.
+- `minutas.py minuta <salida>`:
+  - valida `minuta.json`;
+  - busca cada cita en la transcripción cerca de su momento, o en el texto de la captura citada, con tolerancia a muletillas omitidas, saltos con «…» y términos del glosario;
+  - reporta las citas que están en otro minuto, que no son textuales o que no aparecen;
+  - genera `minuta.md`, con cada minuto enlazado a la frase exacta de la transcripción ilustrada.
+- Texto de las capturas (OCR) con RapidOCR 3.10, en CPU y con el modelo multilingüe PP-OCRv6 que trae el paquete (no descarga modelos). Queda en `ocr.json`. `capturas.txt` muestra, por captura, solo las líneas nuevas: en una reunión real de 35 minutos, el 30 % del texto. Arranca en cuanto terminan las capturas, mientras sigue la transcripción. `--no-ocr` o `ocr = false` lo apagan.
+- Pantallas que vuelven: cada captura se compara (SSIM) con las últimas 10 distintas y, si es casi igual a una, queda marcada con `igual_a`. Conserva su imagen, pero las hojas de miniaturas la omiten y el OCR reutiliza el texto.
+- Transcripción ilustrada:
+  - el texto de cada captura, en un bloque desplegable que encuentra la búsqueda del navegador;
+  - las capturas repetidas enlazan a la original;
+  - un ancla por frase (`#t285`), que el navegador resalta al llegar.
+
+### Cambiado
+- `procesar-reunion` lee primero el texto de las capturas para decidir qué imágenes abrir, escribe `minuta.json` en lugar de `minuta.md` y corrige la minuta hasta que sus citas cuadran.
+- Las reuniones procesadas con la 0.2 rehacen capturas, OCR y HTML al volver a correr el comando; la transcripción no se repite.
+
+### Corregido
+- Si se cambiaba a `--capturas ninguna`, la transcripción ilustrada seguía mostrando las capturas de la corrida anterior.
+- Con muy pocas capturas, el aviso de avance decía «75 %» justo antes de terminar. Ya no se avisa un porcentaje si el paso llegó al 100 %.
+
 ## [0.2.0] - 2026-11-09
 
 Cimientos: un proceso que se reanuda, configuración por proyecto, avance visible y pruebas.
@@ -54,6 +80,7 @@ Cimientos: un proceso que se reanuda, configuración por proyecto, avance visibl
 ### Notas
 - No se le pasa vocabulario a Whisper. En pruebas, `hotwords` hizo que repitiera la lista de términos, inventara frases en otros idiomas y perdiera la mitad del contenido. El vocabulario del proyecto se usa para corregir términos en la minuta.
 
-[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.2.0...HEAD
+[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.0...HEAD
+[0.3.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.2.0...minutas-video--v0.3.0
 [0.2.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.1.0...minutas-video--v0.2.0
 [0.1.0]: https://github.com/Juliocbm/minutas-video/releases/tag/minutas-video--v0.1.0

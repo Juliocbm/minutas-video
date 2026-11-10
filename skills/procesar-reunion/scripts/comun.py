@@ -13,7 +13,7 @@ import sys
 import time
 from pathlib import Path
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 PAUSA_PARRAFO = 1.5   # s de silencio que cortan un párrafo en el .txt
 MAX_PALABRAS = 60     # palabras por párrafo en el .txt antes de cortar
 PREFIJO_PROGRESO = "@progreso "
@@ -91,6 +91,11 @@ def configurar_consola():
 def hms(segundos, sep=":"):
     s = int(segundos)
     return f"{s // 3600:02}{sep}{s % 3600 // 60:02}{sep}{s % 60:02}"
+
+
+def ancla(segundos):
+    """Id HTML de la frase que empieza en ese segundo de la transcripción ilustrada (minuta.md enlaza a él)."""
+    return f"t{int(segundos)}"
 
 
 def ts_srt(segundos):

@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>De la grabación de una reunión a una minuta que se puede verificar.</b><br>
-  Transcripción local con Whisper · capturas de lo que se mostraba · transcripción ilustrada · minuta con acuerdos y pendientes
+  Transcripción local con Whisper · capturas de lo que se mostraba, con su texto · transcripción ilustrada · minuta con cada acuerdo respaldado por una cita verificada
 </p>
 
 <p align="center">
@@ -38,9 +38,9 @@
 Le pasas a Claude la grabación de una junta y te devuelve:
 
 - **La transcripción** con marcas de tiempo (`.txt` y `.srt`), hecha en tu máquina.
-- **Capturas** automáticas cada vez que cambia lo que se muestra en pantalla.
+- **Capturas** automáticas cada vez que cambia lo que se muestra en pantalla, con **su texto** (OCR) para buscarlo y citarlo. Si la pantalla vuelve a algo ya visto, la captura queda marcada como repetida.
 - **Una transcripción ilustrada** en HTML: cada captura junto a lo que se dijo mientras estuvo visible. Así "como ven aquí…" vuelve a tener sentido.
-- **Una minuta** con acuerdos, temas y pendientes, cada uno con su minuto y su captura. Si le das documentos relacionados, señala qué cambió la reunión respecto a lo escrito.
+- **Una minuta** con acuerdos, temas y pendientes, cada uno con su minuto, su captura y la cita textual que lo respalda. Antes de entregarla, cada cita se verifica contra la transcripción, y cada minuto enlaza a la frase exacta. Si le das documentos relacionados, señala qué cambió la reunión respecto a lo escrito.
 - Opcional: **un paquete de contexto** para pegarle lo acordado a otra sesión de Claude, por ejemplo la que implementa lo que se decidió.
 
 Funciona con cualquier grabación: videollamadas (Teams, Zoom, Meet), grabaciones de pantalla (OBS), juntas presenciales o solo audio. No depende de ninguna plataforma.
@@ -110,10 +110,12 @@ Si falta algo por decidir, Claude te lo pregunta en una sola ventana de opciones
 |---|---|
 | `transcripcion.txt` · `.srt` · `.json` | Whisper, en local |
 | `capturas/` · `capturas.json` | Comparación de imágenes, en local |
+| `capturas.txt` · `ocr.json` | OCR del texto de cada captura, en local |
 | `glosario.json` | Búsqueda de los términos del glosario, en local |
 | `transcripcion-ilustrada.html` | Script, en local |
 | `reunion.json` · `progreso.json` · `_registro/` | Registro de cada paso, en local |
-| `minuta.md` · `contexto-<tema>.md` | Claude |
+| `minuta.json` · `contexto-<tema>.md` | Claude |
+| `minuta.md` | Script, a partir de `minuta.json` y tras verificar sus citas |
 
 El detalle de cada formato está en [docs/salidas.md](docs/salidas.md).
 
@@ -121,7 +123,8 @@ El detalle de cada formato está en [docs/salidas.md](docs/salidas.md).
 
 - **Whisper** (IA de voz) transcribe en tu GPU o CPU. No necesita internet una vez descargado el modelo.
 - **Las capturas no usan IA:** se compara cada segundo del video con la última captura y se guarda cuando el cambio es grande y la imagen ya se estabilizó.
-- **Claude** orquesta todo y redacta la minuta: lee la transcripción, revisa las capturas que importan, separa acuerdos de propuestas y contrasta con tus documentos.
+- **El texto de las capturas** lo lee [RapidOCR](https://github.com/RapidAI/RapidOCR) en tu CPU, con un modelo multilingüe que viene en el propio paquete.
+- **Claude** orquesta todo y redacta la minuta como datos (`minuta.json`): lee la transcripción y el texto de las capturas, mira las imágenes que importan, separa acuerdos de propuestas y contrasta con tus documentos. Un script verifica cada cita y genera `minuta.md`.
 
 Más detalle en [docs/arquitectura.md](docs/arquitectura.md). Los scripts también se pueden [usar sin Claude](docs/uso-sin-claude.md).
 
@@ -132,7 +135,7 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md). Los scripts tambi�
 | **Claude Code** | Para usarlo como plugin |
 | **GPU NVIDIA** (opcional) | Unos 5 min por hora de audio con el modelo large-v3. Requiere un driver reciente; las librerías CUDA se instalan solas |
 | **Sin GPU** | Funciona en CPU con modelos más chicos (medium o small) |
-| **Espacio** | ~3 GB para el modelo large-v3 y ~1.5 GB para las librerías CUDA, descargados una vez |
+| **Espacio** | ~3 GB para el modelo large-v3, ~1.5 GB para las librerías CUDA y ~260 MB para el OCR, descargados una vez |
 
 Probado en Windows 11 con GPU NVIDIA. Los scripts son multiplataforma, pero macOS y Linux aún no se han probado ([backlog](BACKLOG.md)).
 

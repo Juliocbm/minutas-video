@@ -1,5 +1,8 @@
 """Pruebas de punta a punta del orquestador con la reunión de ejemplo (importa un .vtt: sin Whisper)."""
 import json
+import shutil
+
+from conftest import EJEMPLO, pantalla_con_texto, video_de_pantallas
 
 SALIDA = "reunion-demo_minuta"
 
@@ -74,3 +77,44 @@ def test_seguir_sin_terminal_imprime_el_estado(correr_script, demo_vtt, tmp_path
     correr_script("minutas.py", "procesar", demo_vtt.name)
     r = correr_script("minutas.py", "seguir", tmp_path / SALIDA)
     assert r.returncode == 0 and "reunion-demo.vtt · completo" in r.stdout
+
+
+def test_video_con_transcripcion_importada_lee_el_texto_de_las_capturas(correr_script, demo_vtt, tmp_path):
+    video = tmp_path / "reunion-demo.mp4"
+    agenda = pantalla_con_texto(["Agenda de la revision", "Fecha de lanzamiento"])
+    metricas = pantalla_con_texto(["Reservas por semana", "120 a 410"], fondo=(205, 225, 250))
+    video_de_pantallas(video, [agenda, metricas, agenda])
+    r = correr_script("minutas.py", "procesar", video.name, "--transcripcion", demo_vtt.name)
+    assert r.returncode == 0, r.stdout + r.stderr
+    for paso in ("transcripción", "capturas", "texto de las capturas", "transcripción ilustrada"):
+        assert f"✓ {paso}: listo" in r.stdout, paso
+    assert "3 capturas (1 repite una pantalla anterior)" in r.stdout
+    salida = tmp_path / SALIDA
+    assert "Reservas por semana" in (salida / "capturas.txt").read_text(encoding="utf-8")
+    html = (salida / "transcripcion-ilustrada.html").read_text(encoding="utf-8")
+    assert "Texto en pantalla" in html and 'igual a la <a href="#c0001">0001</a>' in html
+    assert 'id="t3"' in html  # ancla de la primera frase, a la que enlaza minuta.md
+
+    # Sin OCR, el HTML se rehace sin el texto de las capturas.
+    r = correr_script("minutas.py", "procesar", video.name, "--no-ocr")
+    assert "✓ transcripción ilustrada: listo" in r.stdout and "texto de las capturas" not in r.stdout
+    assert "Texto en pantalla" not in (salida / "transcripcion-ilustrada.html").read_text(encoding="utf-8")
+
+
+def test_plan_con_video_incluye_ocr_salvo_que_se_apague(correr_script, tmp_path):
+    video = tmp_path / "junta.mp4"
+    video.write_bytes(b"")  # el plan no abre el video
+    acciones = json.loads(correr_script("minutas.py", "procesar", video.name, "--plan").stdout)["entradas"][0]["acciones"]
+    assert acciones["ocr"]["accion"] == "correr"
+    plan = json.loads(correr_script("minutas.py", "procesar", video.name, "--plan", "--no-ocr").stdout)
+    assert "ocr" not in plan["entradas"][0]["acciones"]
+
+
+def test_comando_minuta(correr_script, tmp_path):
+    salida = tmp_path / "ejemplo"
+    salida.mkdir()
+    for archivo in ("transcripcion.json", "capturas.json", "ocr.json", "minuta.json"):
+        shutil.copy(EJEMPLO / archivo, salida / archivo)
+    r = correr_script("minutas.py", "minuta", salida)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "20 de 20 citas verificadas" in r.stdout and (salida / "minuta.md").exists()

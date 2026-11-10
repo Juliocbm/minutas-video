@@ -5,9 +5,9 @@
 """minutas-video: procesa grabaciones de punta a punta y lleva el registro de cada paso.
 
   minutas.py procesar <grabación|transcripción|carpeta> [...] [opciones]
-      Transcripción (Whisper o importada), capturas, glosario y transcripción ilustrada. Lo que ya
-      está hecho con los mismos parámetros no se repite: si algo falla o cambias una opción, vuelve
-      a correr el mismo comando y solo se rehace lo necesario.
+      Transcripción (Whisper o importada), capturas, texto de las capturas (OCR), glosario y
+      transcripción ilustrada. Lo que ya está hecho con los mismos parámetros no se repite: si algo
+      falla o cambias una opción, vuelve a correr el mismo comando y solo se rehace lo necesario.
   minutas.py procesar <grabación> --plan
       Muestra en JSON qué haría y con qué configuración, sin correr nada.
   minutas.py seguir <salida>
@@ -16,6 +16,9 @@
       Configuración efectiva, de dónde sale cada valor, presets y errores (JSON).
   minutas.py glosario <salida>
       Busca en la transcripción los términos del glosario y las menciones de participantes.
+  minutas.py minuta <salida>
+      Valida minuta.json, verifica cada cita contra la transcripción y el texto de las capturas, y
+      genera minuta.md.
 
 En una terminal muestra barras de progreso. Cuando la salida no es una terminal (por ejemplo, la
 lanza Claude), imprime solo hitos: inicio y fin de cada paso, y avances del 25, 50 y 75 %.
@@ -37,6 +40,7 @@ from pathlib import Path
 
 import config as cfgmod
 import glosario as glosmod
+import minuta as minmod
 from comun import PREFIJO_PROGRESO, VERSION, configurar_consola, escribir_json, hms, leer_json, leer_transcripcion
 from entorno import recomendar
 
@@ -45,18 +49,21 @@ EXT_VIDEO = {".mp4", ".mkv", ".mov", ".webm", ".avi", ".m4v", ".wmv", ".flv", ".
 EXT_AUDIO = {".m4a", ".mp3", ".wav", ".ogg", ".opus", ".flac", ".aac", ".wma"}
 EXT_TRANSCRIPCION = {".vtt", ".srt"}
 
-PASOS = ("transcripcion", "capturas", "glosario", "html")
-NOMBRE = {"transcripcion": "transcripción", "capturas": "capturas", "glosario": "glosario",
-          "html": "transcripción ilustrada"}
-SALIDA_DE = {"transcripcion": "transcripcion.json", "capturas": "capturas.json", "glosario": "glosario.json",
-             "html": "transcripcion-ilustrada.html"}
-DEPENDE = {"transcripcion": (), "capturas": (), "glosario": ("transcripcion",),
-           "html": ("transcripcion", "capturas", "glosario")}
-VERSION_PASO = {"transcripcion": 1, "capturas": 1, "glosario": 1, "html": 1}
+PASOS = ("transcripcion", "capturas", "ocr", "glosario", "html")
+NOMBRE = {"transcripcion": "transcripción", "capturas": "capturas", "ocr": "texto de las capturas",
+          "glosario": "glosario", "html": "transcripción ilustrada"}
+SALIDA_DE = {"transcripcion": "transcripcion.json", "capturas": "capturas.json", "ocr": "ocr.json",
+             "glosario": "glosario.json", "html": "transcripcion-ilustrada.html"}
+DEPENDE = {"transcripcion": (), "capturas": (), "ocr": ("capturas",), "glosario": ("transcripcion",),
+           "html": ("transcripcion", "capturas", "ocr", "glosario")}
+# Subir la versión de un paso hace que se rehaga en las reuniones ya procesadas.
+VERSION_PASO = {"transcripcion": 1, "capturas": 2, "ocr": 1, "glosario": 1, "html": 2}
+EXTERNOS = ("transcripcion", "capturas", "ocr")  # pasos que corren en su propio proceso, en paralelo
+OPCIONALES = ("ocr",)  # si fallan, lo que depende de ellos se hace igual, sin su resultado
 HITOS = (25, 50, 75)
 # Opciones de la corrida que se recuerdan en reunion.json y se reaplican al reanudar esa reunión.
 RECORDADAS = ("preset", "idioma", "modelo", "dispositivo", "capturas", "max_capturas", "umbral_cambio",
-              "pista", "transcripcion", "titulo", "nota", "incrustar")
+              "ocr", "pista", "transcripcion", "titulo", "nota", "incrustar")
 
 
 # ───────────────────────── utilidades ─────────────────────────
@@ -151,7 +158,7 @@ def explicitas(a):
 def corrida_desde(op):
     return {"preset": op.get("preset"), "idioma": op.get("idioma"),
             "transcripcion": {"modelo": op.get("modelo"), "dispositivo": op.get("dispositivo")},
-            "capturas": {"modo": op.get("capturas"), "max": op.get("max_capturas")}}
+            "capturas": {"modo": op.get("capturas"), "max": op.get("max_capturas"), "ocr": op.get("ocr")}}
 
 
 def motivo_de(paso, previo, parametros, existe):
@@ -214,6 +221,10 @@ def planear(ruta, a, rec):
                            "umbral_cambio": opciones.get("umbral_cambio")},
         }
 
+    if "capturas" in pasos and ef["capturas"]["ocr"]:
+        pasos["ocr"] = {"script": "ocr_capturas.py", "with": [], "args": [str(salida), "--idioma", ef["idioma"]],
+                        "parametros": {"idioma": ef["idioma"]}}
+
     if cfg["glosario"] or cfg["participantes"]:
         pasos["glosario"] = {"interno": True,
                              "parametros": {"terminos": cfg["glosario"], "personas": cfg["participantes"]}}
@@ -225,9 +236,15 @@ def planear(ruta, a, rec):
         html += ["--nota", opciones["nota"]]
     if opciones.get("incrustar"):
         html.append("--incrustar")
+    # Si ya no hay capturas u OCR (cambió el modo), que el HTML no muestre los archivos que quedaron.
+    if "capturas" not in pasos:
+        html.append("--sin-capturas")
+    if "ocr" not in pasos:
+        html.append("--sin-ocr")
     pasos["html"] = {"script": "armar_html.py", "with": [], "args": html,
                      "parametros": {"titulo": opciones.get("titulo") or "", "nota": opciones.get("nota") or "",
-                                    "incrustar": bool(opciones.get("incrustar"))}}
+                                    "incrustar": bool(opciones.get("incrustar")),
+                                    "capturas": "capturas" in pasos, "ocr": "ocr" in pasos}}
 
     previos = previo.get("pasos", {})
     solo, forzar = a.solo or set(), a.forzar or set()
@@ -345,7 +362,7 @@ class Pantalla:
                 for h in HITOS:
                     if p["pct"] >= h and h not in p["hitos"]:
                         p["hitos"].add(h)
-                        hito = h
+                        hito = h if p["pct"] < 100 else None  # al 100 % ya llega el «✓ listo»
             self._guardar()
             self._dibujar()
         if hito:
@@ -440,8 +457,16 @@ def resumen_de(paso, salida):
         return " · ".join(partes)
     if paso == "capturas":
         datos = leer_json(salida / "capturas.json", {}) or {}
-        n = len(datos.get("capturas", []))
-        return f"{n} capturas" + (" (se alcanzó el tope)" if datos.get("meta", {}).get("truncado") else "")
+        capturas = datos.get("capturas", [])
+        iguales = sum(1 for c in capturas if "igual_a" in c)
+        texto = f"{len(capturas)} {'captura' if len(capturas) == 1 else 'capturas'}"
+        if iguales:
+            texto += f" ({iguales} {'repite' if iguales == 1 else 'repiten'} una pantalla anterior)"
+        return texto + (" · se alcanzó el tope" if datos.get("meta", {}).get("truncado") else "")
+    if paso == "ocr":
+        capturas = (leer_json(salida / "ocr.json", {}) or {}).get("capturas", [])
+        con_texto = sum(1 for c in capturas if c.get("lineas"))
+        return f"{con_texto} de {len(capturas)} {'captura' if len(capturas) == 1 else 'capturas'} con texto"
     if paso == "glosario":
         datos = leer_json(salida / "glosario.json", {}) or {}
         con_variantes = sum(1 for t in datos.get("terminos", []) if t["variantes"])
@@ -474,6 +499,9 @@ def ejecutar(plan, uv, tty):
     if "glosario" not in plan["pasos"]:  # se quitó el glosario: que la nota vieja no siga en el HTML
         (salida / "glosario.json").unlink(missing_ok=True)
         manifiesto["pasos"].pop("glosario", None)
+    for paso in ("capturas", "ocr"):  # ya no aplican: el HTML los ignora (--sin-capturas, --sin-ocr)
+        if paso not in plan["pasos"]:
+            manifiesto["pasos"].pop(paso, None)
 
     def guardar():
         manifiesto["actualizado"] = ahora()
@@ -513,15 +541,29 @@ def ejecutar(plan, uv, tty):
             pantalla.linea(f"  bitácora: {registro / (paso + '.log')}")
         guardar()
 
+    def bloqueado(paso):
+        bloqueo = [d for d in DEPENDE[paso] if d in fallidos and d not in OPCIONALES]
+        if bloqueo:
+            pantalla.terminar(paso, "omitido")
+            pantalla.linea(f"· {NOMBRE[paso]}: no se hizo porque falló {', '.join(NOMBRE[d] for d in bloqueo)}")
+            fallidos.add(paso)
+        return bool(bloqueo)
+
     procesos = {}
     try:
-        for paso in ("transcripcion", "capturas"):
-            if paso in correr:
+        # Transcripción y capturas arrancan juntas; el OCR, en cuanto terminan las capturas.
+        pendientes = [p for p in EXTERNOS if p in correr]
+        while pendientes or procesos:
+            for paso in list(pendientes):
+                if any(d in pendientes or d in procesos for d in DEPENDE[paso]):
+                    continue
+                pendientes.remove(paso)
+                if bloqueado(paso):
+                    continue
                 pantalla.registrar(paso, "en_curso", "preparando el entorno (la primera vez instala dependencias)")
                 manifiesto["pasos"][paso] = {"estado": "en_curso", "inicio": ahora()}
                 procesos[paso] = lanzar(uv, paso, plan["pasos"][paso], pantalla, registro)
-        guardar()
-        while procesos:
+                guardar()
             for paso in list(procesos):
                 p = procesos[paso]
                 if p["proc"].poll() is not None:
@@ -533,13 +575,7 @@ def ejecutar(plan, uv, tty):
             time.sleep(0.2)
 
         for paso in ("glosario", "html"):
-            if paso not in correr:
-                continue
-            bloqueo = [d for d in DEPENDE[paso] if d in fallidos]
-            if bloqueo:
-                pantalla.terminar(paso, "omitido")
-                pantalla.linea(f"· {NOMBRE[paso]}: no se hizo porque falló {', '.join(NOMBRE[d] for d in bloqueo)}")
-                fallidos.add(paso)
+            if paso not in correr or bloqueado(paso):
                 continue
             inicio = time.time()
             pantalla.registrar(paso, "en_curso", "generando")
@@ -629,6 +665,8 @@ def main():
     pp.add_argument("--capturas", choices=["pantalla", "camara", "ninguna"])
     pp.add_argument("--max-capturas", type=int)
     pp.add_argument("--umbral-cambio", type=float)
+    pp.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=None,
+                    help="leer el texto de las capturas (por defecto, sí)")
     pp.add_argument("--pista", type=int, help="pista de audio, si la grabación tiene varias")
     pp.add_argument("--transcripcion", help=".vtt/.srt de la plataforma en lugar de Whisper; 'whisper' para volver a Whisper")
     pp.add_argument("--titulo")
@@ -649,6 +687,9 @@ def main():
     pg = sub.add_parser("glosario", help="busca los términos del glosario en una transcripción")
     pg.add_argument("salida")
     pg.add_argument("--proyecto")
+
+    pm = sub.add_parser("minuta", help="valida minuta.json, verifica la evidencia y genera minuta.md")
+    pm.add_argument("salida")
 
     a = p.parse_args()
 
@@ -672,6 +713,9 @@ def main():
         print(datos["nota"] or "No se encontraron variantes mal escritas.")
         print(f"→ {salida / 'glosario.json'}")
         return
+
+    if a.comando == "minuta":
+        sys.exit(minmod.comando(Path(a.salida)))
 
     entradas = expandir(a.entradas)
     if len(entradas) > 1 and (a.salida or a.transcripcion):

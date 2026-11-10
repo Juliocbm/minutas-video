@@ -18,7 +18,7 @@ Al reiniciar el editor ya aparece en el PATH.
 
 **Se interrumpió o falló a la mitad.** Vuelve a correr el mismo comando: lo que terminó con los mismos parámetros no se repite. `reunion.json` dice qué pasos están completos y `_registro/<paso>.log` trae el error completo.
 
-**Quiero rehacer un paso aunque esté al día.** `--forzar transcripcion` (o `capturas`, `glosario`, `html`, `todo`). Lo que depende de ese paso se rehace solo.
+**Quiero rehacer un paso aunque esté al día.** `--forzar transcripcion` (o `capturas`, `ocr`, `glosario`, `html`, `todo`). Lo que depende de ese paso se rehace solo.
 
 **Quiero cambiar solo la nota o el título del HTML.** `--solo html --nota "…"`. La nota y el título se recuerdan en las siguientes corridas de esa reunión.
 
@@ -58,6 +58,26 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 **Muy pocas capturas.** Ocurre con cambios sutiles, como scroll corto o resaltados. Baja `--umbral-cambio` (ej. 0.02). Un tramo largo sin capturas casi siempre es una pantalla fija: confírmalo con `hojas_contacto.py tiempos`.
 
 **Algo animado genera capturas de más.** Un GIF en una firma de correo, por ejemplo. El chequeo de estabilidad suele filtrarlo; si no, sube un poco `--umbral-cambio`.
+
+**Una captura dice "igual a la 0012".** La pantalla volvió a algo que ya se había mostrado (una lámina anterior, la misma ventana). La imagen se guarda igual, pero no se revisa ni se le pasa el OCR otra vez. Si el cambio era pequeño pero importante (un dato en una tabla), está en esa imagen: ábrela.
+
+## Texto de las capturas (OCR)
+
+**Tarda varios minutos.** El OCR corre en CPU, unos 4 s por captura de 1080p, y empieza en cuanto terminan las capturas, mientras sigue la transcripción. Para omitirlo: `--no-ocr` (o `ocr = false` en `[capturas]` de `config.toml`).
+
+**Texto con errores o en desorden.** Es OCR automático: puede confundir caracteres, y en pantallas con varias columnas mezcla el orden de las líneas. Úsalo para encontrar y citar; confirma los datos críticos en la imagen.
+
+**Falló el paso "texto de las capturas".** La transcripción ilustrada se genera igual, sin el texto. La causa está en `_registro/ocr.log`; al volver a correr el comando, solo se reintenta el OCR (y el HTML).
+
+## Minuta (`minutas.py minuta`)
+
+**"minuta.json tiene errores".** Falta un campo obligatorio, sobra una clave (por ejemplo `evidencias` en lugar de `evidencia`) o un tiempo está mal escrito. El mensaje dice dónde; el formato está en `references/minuta.md`. No se genera nada hasta corregirlo.
+
+**"la cita está en 12:40, no cerca de 05:30".** El momento no corresponde: corrige `t`. La cita se busca de 30 s antes a 90 s después del momento indicado.
+
+**"se parece, pero no es textual".** La cita se reescribió. Cópiala tal cual de `transcripcion.txt` (se aceptan muletillas omitidas y saltos con «…»).
+
+**"no aparece en la transcripción".** Puede venir de la pantalla: indica la captura y cópiala de `capturas.txt`. Si no hay respaldo textual, quita la cita o marca el elemento como `"inferido": true`.
 
 ## Otros
 

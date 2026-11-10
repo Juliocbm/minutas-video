@@ -21,10 +21,15 @@ Cómo decide: muestrea el video, compara una miniatura en gris contra la última
 cambió más del umbral, espera a que la imagen se estabilice para no capturar a media transición.
 Un archivo de solo audio produce una lista vacía.
 
+Pantallas que vuelven: cada captura se compara (SSIM) con las últimas 10 distintas. Si es casi igual
+a una (la presentación vuelve a una lámina, A→B→A), se guarda igual —un cambio pequeño nunca se
+pierde— pero queda marcada con "igual_a": n, para no revisarla ni pasarle el OCR otra vez.
+
 Genera <salida>/capturas/NNNN_HH-MM-SS.jpg y <salida>/capturas.json.
 """
 import argparse
 import time
+from collections import deque
 from pathlib import Path
 
 import av
@@ -33,6 +38,12 @@ import numpy as np
 from comun import Progreso, configurar_consola, escribir_json, hms
 
 ANCHO, ALTO = 192, 108
+# Pantallas que vuelven. Medido con una reunión real: las repeticiones dieron SSIM de 0.98 a 0.996 (solo
+# cambiaba una firma animada) y la pantalla distinta más parecida, 0.95. Un hash perceptual no servía:
+# entre páginas de un mismo documento daba distancias de 3 bits con SSIM de 0.80.
+ANCHO_SSIM, ALTO_SSIM = 320, 180
+UMBRAL_IGUAL = 0.97
+MEMORIA_IGUALES = 10
 MODOS = {
     #            muestreo  dif_pixel  cambio  estable  max_espera  entre_forzadas  entre_capturas
     "pantalla": (1.0,      24,        0.04,   0.010,   6,          20,             0),
@@ -42,6 +53,20 @@ MODOS = {
 
 def miniatura(frame):
     return frame.reformat(width=ANCHO, height=ALTO, format="gray").to_ndarray().astype(np.int16)
+
+
+def _caja(x, k=7):
+    """Promedio en ventanas de k×k con sumas acumuladas (sin SciPy)."""
+    c = np.cumsum(np.cumsum(np.pad(x, ((1, 0), (1, 0))), 0), 1)
+    return (c[k:, k:] - c[:-k, k:] - c[k:, :-k] + c[:-k, :-k]) / (k * k)
+
+
+def ssim(a, b):
+    """Similitud estructural media entre dos imágenes en gris del mismo tamaño (1 = idénticas)."""
+    c1, c2 = (0.01 * 255) ** 2, (0.03 * 255) ** 2
+    ma, mb = _caja(a), _caja(b)
+    va, vb, cov = _caja(a * a) - ma * ma, _caja(b * b) - mb * mb, _caja(a * b) - ma * mb
+    return float((((2 * ma * mb + c1) * (2 * cov + c2)) / ((ma ** 2 + mb ** 2 + c1) * (va + vb + c2))).mean())
 
 
 def main():
@@ -95,6 +120,7 @@ def main():
 
         ultima = anterior = None
         cambio_desde = None
+        distintas = deque(maxlen=MEMORIA_IGUALES)  # (n, miniatura para SSIM) de las últimas capturas distintas
         t_ultima = t_forzada = -1e9
         siguiente = 0.0
 
@@ -128,14 +154,21 @@ def main():
                 n = len(capturas) + 1
                 nombre = f"{n:04}_{hms(t, '-')}.jpg"
                 frame.to_image().save(dir_cap / nombre, quality=85)
-                capturas.append({
+                captura = {
                     "n": n,
                     "archivo": f"capturas/{nombre}",
                     "t": round(t, 2),
                     "desde": round(t if cambio_desde is None else cambio_desde, 2),
                     "motivo": motivo,
                     "cambio": round(cambio, 3),
-                })
+                }
+                gris = frame.reformat(width=ANCHO_SSIM, height=ALTO_SSIM, format="gray").to_ndarray().astype(np.float64)
+                parecida = max(((ssim(gris, g), m) for m, g in distintas), default=(0.0, None))
+                if parecida[0] >= UMBRAL_IGUAL:
+                    captura["igual_a"] = parecida[1]
+                else:
+                    distintas.append((n, gris))
+                capturas.append(captura)
                 t_ultima = t
                 if motivo == "forzada":
                     t_forzada = t
@@ -145,7 +178,8 @@ def main():
 
     guardar_json()
     forzadas = sum(1 for x in capturas if x["motivo"] == "forzada")
-    print(f"listo en {time.time() - t0:.0f}s: {len(capturas)} capturas ({forzadas} forzadas)")
+    iguales = sum(1 for x in capturas if "igual_a" in x)
+    print(f"listo en {time.time() - t0:.0f}s: {len(capturas)} capturas ({forzadas} forzadas, {iguales} iguales a una anterior)")
 
 
 if __name__ == "__main__":

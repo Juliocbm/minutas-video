@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Revisión de lanzamiento · Mesa Lista</title>
 <style>
-:root { --bg:#f6f6f4; --panel:#ffffff; --tx:#1d1d1f; --mut:#6b6b70; --ln:#e2e2de; --acc:#2f5fd0; color-scheme: light; --h0:#2f5fd0; --h1:#b0452a; --h2:#1f8a5b; --h3:#8a3fb5; --h4:#b8860b; --h5:#0f7c8c; --h6:#c2377a; --h7:#5b6b2f; }
+:root { --bg:#f6f6f4; --panel:#ffffff; --tx:#1d1d1f; --mut:#6b6b70; --ln:#e2e2de; --acc:#2f5fd0; --marca:#fff1a8; color-scheme: light; --h0:#2f5fd0; --h1:#b0452a; --h2:#1f8a5b; --h3:#8a3fb5; --h4:#b8860b; --h5:#0f7c8c; --h6:#c2377a; --h7:#5b6b2f; }
 @media (prefers-color-scheme: dark) {
-  :root { --bg:#141416; --panel:#1d1d20; --tx:#e8e8ea; --mut:#9a9aa2; --ln:#2c2c31; --acc:#8fb0ff; color-scheme: dark; --h0:#8fb0ff; --h1:#ff9a7a; --h2:#6fd3a3; --h3:#d0a0ff; --h4:#f0c35a; --h5:#6fd0de; --h6:#ff8fc3; --h7:#b8c97a; }
+  :root { --bg:#141416; --panel:#1d1d20; --tx:#e8e8ea; --mut:#9a9aa2; --ln:#2c2c31; --acc:#8fb0ff; --marca:#5a4b00; color-scheme: dark; --h0:#8fb0ff; --h1:#ff9a7a; --h2:#6fd3a3; --h3:#d0a0ff; --h4:#f0c35a; --h5:#6fd0de; --h6:#ff8fc3; --h7:#b8c97a; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--tx); font: 16px/1.6 system-ui, "Segoe UI", sans-serif; }
@@ -33,11 +33,17 @@ p { margin: 0 0 12px; }
 p small { color: var(--mut); font: 11px ui-monospace, Consolas, monospace; margin-right: 6px; }
 p b { margin-right: 4px; }
 .vacio { color: var(--mut); font-style: italic; }
+p span[id] { scroll-margin-top: 64px; }
+span:target { background: var(--marca); border-radius: 3px; }
+details.ocr { margin: 0 0 14px; font-size: .85rem; color: var(--mut); }
+details.ocr summary { cursor: pointer; }
+details.ocr div { margin-top: 6px; padding: 8px 12px; background: var(--panel); border: 1px solid var(--ln);
+                  border-radius: 6px; white-space: pre-line; font: 12px/1.5 ui-monospace, Consolas, monospace; }
 @media (max-width: 900px) { section { grid-template-columns: 1fr; } .img { position: static; } }
 </style>
 </head>
 <body>
-<header><h1>Revisión de lanzamiento · Mesa Lista</h1><p class="meta">Duración 00:05:40 · 5 capturas de pantalla · 25 segmentos · transcripción importada · hablantes: Ana Torres, Luis Méndez, Sofía Ramírez</p>
+<header><h1>Revisión de lanzamiento · Mesa Lista</h1><p class="meta">Duración 00:05:40 · 5 capturas de pantalla · texto de las capturas por OCR · 25 segmentos · transcripción importada · hablantes: Ana Torres, Luis Méndez, Sofía Ramírez</p>
 <p class="nota">Demostración con datos ficticios: transcripción importada de un .vtt con hablantes y pantallas generadas por dev/generar_demo.py.</p>
 </header>
 <nav>
@@ -51,44 +57,113 @@ p b { margin-right: 4px; }
 <section id="c0001">
 <div class="img"><a href="capturas/0001_00-00-00.jpg" target="_blank"><img src="capturas/0001_00-00-00.jpg" alt="Captura 0001 en 00:00:00" loading="lazy"></a></div>
 <div><p class="tiempo">00:00:00 – 00:00:58 <span>· captura 0001</span></p>
-<p><small>00:00:03</small><b style="color:var(--h0)">Ana Torres:</b>Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista. Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.</p>
-<p><small>00:00:19</small><b style="color:var(--h1)">Luis Méndez:</b>Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.</p>
-<p><small>00:00:28</small><b style="color:var(--h2)">Sofía Ramírez:</b>Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.</p>
-<p><small>00:00:38</small><b style="color:var(--h0)">Ana Torres:</b>Bien. Empecemos con las métricas, que son buenas noticias.</p>
+<details class="ocr"><summary>Texto en pantalla (7 líneas, OCR)</summary><div>Revisión de lanzamiento
+Mesa Lista ·app de reservas para restaurantes
+Métricas de la beta
+Error en la confirmación por SMS
+Diseño de la pantalla de reserva
+Fecha de lanzamiento
+Equipo Mesa Lista· noviembre 2026</div></details>
+<p><small>00:00:03</small><b style="color:var(--h0)">Ana Torres:</b><span id="t3">Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista.</span> <span id="t9">Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.</span></p>
+<p><small>00:00:19</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t19">Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.</span></p>
+<p><small>00:00:28</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t28">Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.</span></p>
+<p><small>00:00:38</small><b style="color:var(--h0)">Ana Torres:</b><span id="t38">Bien. Empecemos con las métricas, que son buenas noticias.</span></p>
 </div></section>
 <section id="c0002">
 <div class="img"><a href="capturas/0002_00-00-58.jpg" target="_blank"><img src="capturas/0002_00-00-58.jpg" alt="Captura 0002 en 00:00:58" loading="lazy"></a></div>
 <div><p class="tiempo">00:00:58 – 00:02:08 <span>· captura 0002</span></p>
-<p><small>00:00:58</small><b style="color:var(--h0)">Ana Torres:</b>En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.</p>
-<p><small>00:01:10</small><b style="color:var(--h1)">Luis Méndez:</b>¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.</p>
-<p><small>00:01:22</small><b style="color:var(--h0)">Ana Torres:</b>Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.</p>
-<p><small>00:01:36</small><b style="color:var(--h2)">Sofía Ramírez:</b>Propongo medirlo antes de cambiar nada, para no adivinar.</p>
-<p><small>00:01:50</small><b style="color:var(--h0)">Ana Torres:</b>De acuerdo, lo anoto como pendiente mío.</p>
+<details class="ocr"><summary>Texto en pantalla (17 líneas, OCR)</summary><div>Reservas por semana (beta)
+410
+Cancelación
+342
+12%
+268
+antes: 15 %
+210
+165
+120
+S1
+S2
+S3
+S4
+S5
+S6
+Equipo Mesa Lista· noviembre 2026</div></details>
+<p><small>00:00:58</small><b style="color:var(--h0)">Ana Torres:</b><span id="t58">En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.</span></p>
+<p><small>00:01:10</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t70">¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.</span></p>
+<p><small>00:01:22</small><b style="color:var(--h0)">Ana Torres:</b><span id="t82">Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.</span></p>
+<p><small>00:01:36</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t96">Propongo medirlo antes de cambiar nada, para no adivinar.</span></p>
+<p><small>00:01:50</small><b style="color:var(--h0)">Ana Torres:</b><span id="t110">De acuerdo, lo anoto como pendiente mío.</span></p>
 </div></section>
 <section id="c0003">
 <div class="img"><a href="capturas/0003_00-02-08.jpg" target="_blank"><img src="capturas/0003_00-02-08.jpg" alt="Captura 0003 en 00:02:08" loading="lazy"></a></div>
 <div><p class="tiempo">00:02:08 – 00:03:25 <span>· captura 0003</span></p>
-<p><small>00:02:08</small><b style="color:var(--h1)">Luis Méndez:</b>Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación. Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.</p>
-<p><small>00:02:36</small><b style="color:var(--h0)">Ana Torres:</b>¿Qué propones?</p>
-<p><small>00:02:42</small><b style="color:var(--h1)">Luis Méndez:</b>Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.</p>
-<p><small>00:03:00</small><b style="color:var(--h0)">Ana Torres:</b>Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.</p>
+<details class="ocr"><summary>Texto en pantalla (17 líneas, OCR)</summary><div>logs·servicio-notificaciones
+09:14:02 POST /api/reservas/8812/confirmar
+200
+sms enviado
+09:14:05 POST /api/reservas/8813/confirmar
+500
+SmsTimeoutError: el proveedor no respondió en 10 s
+09:15:41 POST /api/reservas/8814/confirmar
+200
+sms enviado
+09:17:09 POST /api/reservas/8815/confirmar
+500
+SmsTimeoutError: el proveedor no respondió en 10 s
+09:17:33 POST /api/reservas/8816/confirmar
+200 sms enviado
+Últimos 7 días
+38 fallos de 1 240 envíos (3.1 %)</div></details>
+<p><small>00:02:08</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t128">Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación.</span> <span id="t142">Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.</span></p>
+<p><small>00:02:36</small><b style="color:var(--h0)">Ana Torres:</b><span id="t156">¿Qué propones?</span></p>
+<p><small>00:02:42</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t162">Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.</span></p>
+<p><small>00:03:00</small><b style="color:var(--h0)">Ana Torres:</b><span id="t180">Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.</span></p>
 </div></section>
 <section id="c0004">
 <div class="img"><a href="capturas/0004_00-03-25.jpg" target="_blank"><img src="capturas/0004_00-03-25.jpg" alt="Captura 0004 en 00:03:25" loading="lazy"></a></div>
 <div><p class="tiempo">00:03:25 – 00:04:45 <span>· captura 0004</span></p>
-<p><small>00:03:25</small><b style="color:var(--h2)">Sofía Ramírez:</b>Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve. Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.</p>
-<p><small>00:03:55</small><b style="color:var(--h1)">Luis Méndez:</b>Por mí bien; es solo de la interfaz, no toca la API.</p>
-<p><small>00:04:08</small><b style="color:var(--h0)">Ana Torres:</b>Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?</p>
-<p><small>00:04:20</small><b style="color:var(--h2)">Sofía Ramírez:</b>Sí, para el viernes.</p>
+<details class="ocr"><summary>Texto en pantalla (14 líneas, OCR)</summary><div>Pantalla de reserva
+Nueva reserva
+Problema
+Fecha
+En teléfonos de 5.5&quot; el botón queda
+sáb 14 nov
+debajo del pliegue y no se ve.
+Hora
+20:30
+Personas
+Propuesta
+Subirlo debajo de «Personas»
+y dejarlo fijo al hacer scroll.
+pliegue</div></details>
+<p><small>00:03:25</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t205">Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve.</span> <span id="t220">Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.</span></p>
+<p><small>00:03:55</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t235">Por mí bien; es solo de la interfaz, no toca la API.</span></p>
+<p><small>00:04:08</small><b style="color:var(--h0)">Ana Torres:</b><span id="t248">Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?</span></p>
+<p><small>00:04:20</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t260">Sí, para el viernes.</span></p>
 </div></section>
 <section id="c0005">
 <div class="img"><a href="capturas/0005_00-04-45.jpg" target="_blank"><img src="capturas/0005_00-04-45.jpg" alt="Captura 0005 en 00:04:45" loading="lazy"></a></div>
 <div><p class="tiempo">00:04:45 – 00:05:40 <span>· captura 0005</span></p>
-<p><small>00:04:45</small><b style="color:var(--h0)">Ana Torres:</b>Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.</p>
-<p><small>00:05:00</small><b style="color:var(--h1)">Luis Méndez:</b>¿Y si no está listo?</p>
-<p><small>00:05:06</small><b style="color:var(--h0)">Ana Torres:</b>Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.</p>
-<p><small>00:05:20</small><b style="color:var(--h2)">Sofía Ramírez:</b>Entonces revisamos el estado el diecinueve, ¿les parece?</p>
-<p><small>00:05:30</small><b style="color:var(--h0)">Ana Torres:</b>Perfecto. Revisión el diecinueve. Gracias a los dos.</p>
+<details class="ocr"><summary>Texto en pantalla (14 líneas, OCR)</summary><div>Plan al lanzamiento
+Antes del 18/11
+19/11
+27/11
+Reintento de SMS y
+Revisión de estado del
+Lanzamiento, si el reintento
+respaldo por correo ·Luis
+reintento
+está listo
+Botón de confirmar fijo
+Si no: se mueve una semana
+Sofía (viernes)
+Equipo Mesa Lista· noviembre 2026</div></details>
+<p><small>00:04:45</small><b style="color:var(--h0)">Ana Torres:</b><span id="t285">Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.</span></p>
+<p><small>00:05:00</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t300">¿Y si no está listo?</span></p>
+<p><small>00:05:06</small><b style="color:var(--h0)">Ana Torres:</b><span id="t306">Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.</span></p>
+<p><small>00:05:20</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t320">Entonces revisamos el estado el diecinueve, ¿les parece?</span></p>
+<p><small>00:05:30</small><b style="color:var(--h0)">Ana Torres:</b><span id="t330">Perfecto. Revisión el diecinueve. Gracias a los dos.</span></p>
 </div></section>
 </main>
 </body>

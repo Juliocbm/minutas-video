@@ -10,7 +10,10 @@ resultado del plugin sin publicar ninguna reunión real.
 Uso (desde la raíz del repo):
   uv run --script dev/generar_demo.py
   uv run --script skills/procesar-reunion/scripts/importar_transcripcion.py docs/ejemplo/reunion-demo.vtt --salida docs/ejemplo
+  uv run --script skills/procesar-reunion/scripts/ocr_capturas.py docs/ejemplo
   uv run --script skills/procesar-reunion/scripts/armar_html.py docs/ejemplo --titulo "..." --nota "..."
+  uv run --script skills/procesar-reunion/scripts/minutas.py minuta docs/ejemplo
+(docs/ejemplo/minuta.json se escribe a mano: es la parte que redacta Claude.)
 """
 import json
 from pathlib import Path

@@ -1,6 +1,6 @@
 ---
 name: procesar-reunion
-description: Convierte la grabación de una reunión, junta, videollamada o conversación (video o solo audio) en transcripción con tiempos, capturas de lo que se mostraba, transcripción ilustrada en HTML y una minuta con acuerdos y pendientes; opcionalmente, un resumen de contexto para otra sesión de Claude. Transcribe en local con Whisper (GPU opcional) y los requisitos se instalan solos con uv.
+description: Convierte la grabación de una reunión, junta, videollamada o conversación (video o solo audio) en transcripción con tiempos, capturas de lo que se mostraba con su texto, transcripción ilustrada en HTML y una minuta con acuerdos y pendientes, cada uno con su cita verificada contra la grabación; opcionalmente, un resumen de contexto para otra sesión de Claude. Transcribe en local con Whisper (GPU opcional) y los requisitos se instalan solos con uv.
 when_to_use: Úsala siempre que el usuario quiera transcribir o sacar el texto de un video o audio, saber qué se dijo o se acordó en una junta (grabada o con su transcripción exportada de Teams, Zoom o Meet), hacer la minuta o el resumen de una reunión, o comparta la ruta de una grabación (mp4, mkv, mov, webm, m4a, mp3, wav) o de una transcripción de reunión (.vtt, .srt), aunque no diga "minuta" ni "transcripción" y aunque pida algo rápido. Con la skill, cada acuerdo queda con su minuto y los archivos quedan guardados para verificar.
 argument-hint: "[grabación] [--preset rapido|estandar|completo|audio]"
 allowed-tools: Bash(uv run *) Bash(uv --version)
@@ -13,11 +13,13 @@ Convierte una grabación en archivos que se pueden leer, buscar y compartir. Tod
 | Archivo | Qué es | Lo genera |
 |---|---|---|
 | `transcripcion.txt` · `.srt` · `.json` | Texto con `[hh:mm:ss]` y hablante cuando se conoce | `minutas.py` |
-| `capturas/` + `capturas.json` | Una imagen cada vez que cambia lo que se ve | `minutas.py` |
+| `capturas/` + `capturas.json` | Una imagen cada vez que cambia lo que se ve; las que repiten una pantalla anterior quedan marcadas | `minutas.py` |
+| `capturas.txt` · `ocr.json` | Texto de cada captura (OCR). `capturas.txt` trae solo lo nuevo de cada una | `minutas.py` |
 | `glosario.json` | Dónde aparecen mal escritos los términos del glosario y quién es mencionado | `minutas.py` |
 | `transcripcion-ilustrada.html` | Cada captura junto a lo que se dijo mientras estuvo visible | `minutas.py` |
 | `reunion.json` · `progreso.json` · `_registro/` | Registro de cada paso, avance y bitácoras | `minutas.py` |
-| `minuta.md` | Acuerdos, temas y pendientes, con minuto y captura | Tú |
+| `minuta.json` | Acuerdos, temas y pendientes, cada uno con su evidencia (minuto, cita y captura) | Tú |
+| `minuta.md` | La minuta para leer, con enlaces al momento exacto | `minutas.py minuta`, desde `minuta.json` |
 | `contexto-<tema>.md` | Paquete de contexto para otra sesión de Claude | Tú, si se pide |
 
 `minutas.py` hace todo lo mecánico y recuerda lo que ya hizo: si algo falla o cambia una opción, el mismo comando solo rehace lo necesario. Tu trabajo es acordar lo mínimo, lanzar el proceso, informar el avance, revisar y redactar.
@@ -77,7 +79,7 @@ La primera vez que apliques esta skill en una conversación, menciona la privaci
 uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py procesar "<grabación>" [--preset <preset>] [--transcripcion "<archivo.vtt>"] [--idioma auto] [--pista N] [--salida "<carpeta>"]
 ```
 
-- Lánzalo **en segundo plano** y espera la notificación de que terminó. Transcribe y extrae capturas en paralelo; nunca lances dos procesos con transcripción a la vez, porque agotan la memoria.
+- Lánzalo **en segundo plano** y espera la notificación de que terminó. Transcribe y extrae capturas en paralelo, y lee el texto de las capturas en cuanto terminan (unos 4 s por captura). Nunca lances dos procesos con transcripción a la vez, porque agotan la memoria.
 - Con varias grabaciones, pásalas todas en un solo comando (o una carpeta): se procesan una tras otra.
 - **Avance:** si tienes la herramienta Monitor, sigue `<salida>/_registro/hitos.log` (por ejemplo `tail -n +1 -F "<salida>/_registro/hitos.log"`). Cuando llegue un hito (`▸` 25, 50 y 75 %, `✓` paso terminado, `✗` error), escribe una línea corta al usuario: "Transcripción al 50 %, faltan ~2 min". No comentes otras líneas.
 - Dile también que puede ver una barra de progreso en vivo en su propia terminal con `uv run --script "<ruta absoluta de minutas.py>" seguir "<salida>"`.
@@ -95,8 +97,9 @@ Aquí está el valor: cruzar lo que se dijo con lo que se veía. Ajusta la profu
 1. **Lee `transcripcion.txt` completo.** Si es larga, léela por tramos y toma notas. Identifica temas, decisiones, dudas y términos mal escritos.
 2. **Lee `glosario.json`** si existe: qué variantes mal escritas aparecieron, con su minuto, y las menciones de cada participante. Úsalo para corregir términos y para saber quién estaba y con qué rol (`config.participantes`).
 3. **Capturas** (si hay):
-   - `ligera`: solo si el texto se refiere a algo que se ve ("como ven aquí…").
-   - `normal`: genera las hojas de miniaturas con `uv run --script ${CLAUDE_SKILL_DIR}/scripts/hojas_contacto.py capturas "<salida>"` y míralas; abre a tamaño completo solo las que importan (tablas, documentos, código, errores, chats, nombres de participantes). Con 5 a 10 suele bastar.
+   - **Lee primero `capturas.txt`**: el texto de cada pantalla, solo lo nuevo respecto a la anterior. Te dice qué se mostró sin abrir imágenes, cuáles conviene abrir y los valores exactos para citar. El OCR puede confundir caracteres: confirma en la imagen los datos críticos (montos, folios, fechas). Si es muy largo, búscale los términos de la reunión en lugar de leerlo entero.
+   - `ligera`: abre imágenes solo si el texto se refiere a algo que se ve ("como ven aquí…").
+   - `normal`: genera las hojas de miniaturas con `uv run --script ${CLAUDE_SKILL_DIR}/scripts/hojas_contacto.py capturas "<salida>"` y míralas; abre a tamaño completo solo las que importan (tablas, documentos, código, errores, chats, nombres de participantes). Con 5 a 10 suele bastar. Las hojas omiten las capturas que repiten una pantalla anterior.
    - `exhaustiva`: todas las hojas, y a tamaño completo cada captura con texto o datos relevantes.
 4. **Revisa lo que no quedó capturado.** Si el audio se refiere a algo sin captura, o hay un tramo largo sin capturas, mira cuadros puntuales:
    ```
@@ -110,14 +113,22 @@ Aquí está el valor: cruzar lo que se dijo con lo que se veía. Ajusta la profu
 
 ## 6. Minuta
 
-Lee `references/minuta.md`. Usa la plantilla **completa** o la **corta** según `config.efectiva.minuta`. Al redactarla:
+Lee `references/minuta.md` y escribe **`<salida>/minuta.json`**, no `minuta.md`. Usa `"plantilla": "completa"` o `"corta"` según `config.efectiva.minuta`. Al redactarla:
 
-- **Cada acuerdo o dato lleva su minuto (`mm:ss`)** y, si existe, el enlace a la captura (`capturas/0012_00-05-30.jpg`). Así quien la lea puede verificarlo en la transcripción ilustrada.
-- **Distingue** acuerdo, propuesta, duda abierta e intención. Que alguien mencione una idea no la convierte en acuerdo.
-- **Corrige los términos mal transcritos** y lístalos al final, para que el lector entienda la transcripción original.
-- **Contrasta con documentos relacionados.** Si el usuario mencionó análisis, planes o código relacionados con la reunión (o el preset es `completo`), revísalos y agrega una sección "Diferencias con documentos" con rutas y líneas. Es de lo más valioso: una reunión suele cambiar decisiones que ya estaban escritas. Separa lo verificado de lo inferido.
+- **Cada acuerdo, punto, pregunta, riesgo y pendiente lleva evidencia:** el momento (`t`, el `[hh:mm:ss]` del párrafo), una **cita textual** copiada de la transcripción (o de `capturas.txt`, si está en pantalla) y la captura, si se ve. Así cualquiera puede comprobarlo, y el comando lo verifica.
+- **Distingue** acuerdo, propuesta, duda abierta e intención (`tipo` de cada punto). Que alguien mencione una idea no la convierte en acuerdo.
+- **Corrige los términos mal transcritos** en el texto y anótalos en `terminos` (los del glosario se agregan solos).
+- **Contrasta con documentos relacionados.** Si el usuario mencionó análisis, planes o código relacionados con la reunión (o el preset es `completo`), revísalos y llena `diferencias` con rutas y líneas. Es de lo más valioso: una reunión suele cambiar decisiones que ya estaban escritas. Lo que no leíste lleva `"verificado": false`.
 
-Guárdala como `<salida>/minuta.md`. Después, si hay algo que el lector del HTML deba saber además de lo que ya pone el glosario (que se agrega solo), regenera la transcripción ilustrada con una nota. Tarda un segundo:
+Después genera la minuta:
+
+```
+uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py minuta "<salida>"
+```
+
+Valida `minuta.json`, busca cada cita cerca de su momento (y en el texto de la captura citada) y escribe `minuta.md` con enlaces a la frase exacta de la transcripción ilustrada. Si reporta problemas (cita en otro minuto, cita que no es textual, captura que no corresponde), corrige `minuta.json` y vuélvelo a correr hasta que no queden. No edites `minuta.md` a mano: se regenera.
+
+Si hay algo que el lector del HTML deba saber además de lo que ya pone el glosario (que se agrega solo), regenera la transcripción ilustrada con una nota. Tarda un segundo:
 
 ```
 uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py procesar "<grabación>" --solo html --nota "<aviso para el lector>"
@@ -135,7 +146,7 @@ Guárdalo como `<salida>/contexto-<tema>.md` y, si lo pide, cópialo al portapap
 ## 8. Entrega
 
 - Lista los archivos con su ruta absoluta.
-- Di qué tan confiable es la transcripción: si es automática, si tiene hablantes y qué términos corregiste.
+- Di qué tan confiable es la transcripción: si es automática, si tiene hablantes y qué términos corregiste. Di cuántas citas se verificaron (la línea "Evidencia" del comando `minuta`).
 - Menciona que `_revision/` y `_registro/` son de trabajo y se pueden borrar.
 - Si corregiste términos que no estaban en el glosario, ofrece guardarlos en `.minutas-video/glosario.toml` del proyecto (formato en `references/configuracion.md`) para que la próxima vez se detecten solos. Para configurar todo con calma: `/minutas-video:configurar`.
 - Si no hubo hablantes y el usuario necesita saber quién dijo qué, sugiere exportar la transcripción de la plataforma la próxima vez.
