@@ -1,6 +1,6 @@
 {
   "name": "minutas-video",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Convierte grabaciones de reuniones (video o audio) en transcripción con tiempos, capturas de pantalla con su texto, transcripción ilustrada en HTML y una minuta con cada acuerdo respaldado por una cita verificada. Whisper local con GPU opcional; los requisitos se instalan solos con uv.",
   "author": {
     "name": "Juliocbm",

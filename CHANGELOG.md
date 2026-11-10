@@ -6,6 +6,23 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+## [0.3.1] - 2026-11-09
+
+Ver y compartir: la grabación dentro de la transcripción ilustrada y la minuta en PDF, Word y CSV.
+
+### Añadido
+- Transcripción ilustrada:
+  - reproductor de la grabación: clic en una frase y salta a ese momento, la frase que suena se resalta y se sigue (hasta que haces scroll a mano), y los enlaces `#t285` de la minuta dejan la grabación en ese minuto. Enlaza la grabación con una ruta relativa, sin copiarla; Chrome y Edge reproducen los `.mkv` de OBS;
+  - búsqueda en lo dicho y en el texto de las capturas, sin importar acentos ni mayúsculas, con las palabras resaltadas;
+  - filtro por hablante cuando la transcripción los trae.
+- `minutas.py exportar <salida> [pdf] [docx] [csv]`, desde `minuta.json` y sin enlaces a archivos locales:
+  - `minuta.pdf`, impreso por Edge o Chrome en modo headless;
+  - `minuta.docx`, con python-docx;
+  - `pendientes.csv`, en UTF-8 con BOM para Excel, con responsable, fecha, minuto y cita de cada pendiente.
+
+### Cambiado
+- Las reuniones ya procesadas rehacen solo la transcripción ilustrada (un segundo) al volver a correr el comando.
+
 ## [0.3.0] - 2026-11-09
 
 Evidencia: el texto de las pantallas y una minuta cuyas citas se verifican contra la grabación.
@@ -80,7 +97,8 @@ Cimientos: un proceso que se reanuda, configuración por proyecto, avance visibl
 ### Notas
 - No se le pasa vocabulario a Whisper. En pruebas, `hotwords` hizo que repitiera la lista de términos, inventara frases en otros idiomas y perdiera la mitad del contenido. El vocabulario del proyecto se usa para corregir términos en la minuta.
 
-[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.0...HEAD
+[Sin publicar]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.1...HEAD
+[0.3.1]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.3.0...minutas-video--v0.3.1
 [0.3.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.2.0...minutas-video--v0.3.0
 [0.2.0]: https://github.com/Juliocbm/minutas-video/compare/minutas-video--v0.1.0...minutas-video--v0.2.0
 [0.1.0]: https://github.com/Juliocbm/minutas-video/releases/tag/minutas-video--v0.1.0

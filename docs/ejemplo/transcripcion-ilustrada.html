@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Revisión de lanzamiento · Mesa Lista</title>
 <style>
-:root { --bg:#f6f6f4; --panel:#ffffff; --tx:#1d1d1f; --mut:#6b6b70; --ln:#e2e2de; --acc:#2f5fd0; --marca:#fff1a8; color-scheme: light; --h0:#2f5fd0; --h1:#b0452a; --h2:#1f8a5b; --h3:#8a3fb5; --h4:#b8860b; --h5:#0f7c8c; --h6:#c2377a; --h7:#5b6b2f; }
+:root { --bg:#f6f6f4; --panel:#ffffff; --tx:#1d1d1f; --mut:#6b6b70; --ln:#e2e2de; --acc:#2f5fd0; --marca:#fff1a8;
+        --actual:rgba(47,95,208,.14); color-scheme: light; --h0:#2f5fd0; --h1:#b0452a; --h2:#1f8a5b; --h3:#8a3fb5; --h4:#b8860b; --h5:#0f7c8c; --h6:#c2377a; --h7:#5b6b2f; }
 @media (prefers-color-scheme: dark) {
-  :root { --bg:#141416; --panel:#1d1d20; --tx:#e8e8ea; --mut:#9a9aa2; --ln:#2c2c31; --acc:#8fb0ff; --marca:#5a4b00; color-scheme: dark; --h0:#8fb0ff; --h1:#ff9a7a; --h2:#6fd3a3; --h3:#d0a0ff; --h4:#f0c35a; --h5:#6fd0de; --h6:#ff8fc3; --h7:#b8c97a; }
+  :root { --bg:#141416; --panel:#1d1d20; --tx:#e8e8ea; --mut:#9a9aa2; --ln:#2c2c31; --acc:#8fb0ff; --marca:#5a4b00;
+          --actual:rgba(143,176,255,.2); color-scheme: dark; --h0:#8fb0ff; --h1:#ff9a7a; --h2:#6fd3a3; --h3:#d0a0ff; --h4:#f0c35a; --h5:#6fd0de; --h6:#ff8fc3; --h7:#b8c97a; }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--tx); font: 16px/1.6 system-ui, "Segoe UI", sans-serif; }
 header, main { max-width: 1440px; margin: 0 auto; padding-inline: 24px; }
 main.solo { max-width: 860px; }
@@ -17,15 +20,24 @@ header { padding-block: 32px 12px; }
 h1 { font-size: 1.5rem; margin: 0 0 6px; }
 .meta { color: var(--mut); font-size: .9rem; margin: 0 0 4px; }
 .nota { font-size: .9rem; margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--acc); background: var(--panel); }
-nav { position: sticky; top: 0; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--ln);
-      padding: 6px 24px; overflow-x: auto; white-space: nowrap; }
-nav a { display: inline-block; padding: 6px 8px; border-radius: 6px; color: var(--mut); text-decoration: none;
-        font: 12px/1 ui-monospace, Consolas, monospace; }
-nav a:hover { background: var(--panel); color: var(--acc); }
+nav { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--ln);
+      padding: 6px 24px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+.herramientas { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.herramientas input, .herramientas select, .herramientas button, #reproductor button {
+  font: 13px system-ui, "Segoe UI", sans-serif; color: var(--tx); background: var(--panel);
+  border: 1px solid var(--ln); border-radius: 6px; padding: 5px 8px; }
+.herramientas input { width: min(300px, 60vw); }
+.herramientas button, #reproductor button { cursor: pointer; min-width: 30px; }
+#conteo { color: var(--mut); font-size: 12px; min-width: 7ch; }
+.tiempos { flex: 1 1 300px; min-width: 0; overflow-x: auto; white-space: nowrap; }
+.tiempos a { display: inline-block; padding: 6px 8px; border-radius: 6px; color: var(--mut); text-decoration: none;
+             font: 12px/1 ui-monospace, Consolas, monospace; }
+.tiempos a:hover { background: var(--panel); color: var(--acc); }
 main { padding-block: 8px 64px; }
+body.con-medio main { padding-bottom: 45vh; }
 section { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 28px;
-          padding-block: 24px; border-bottom: 1px solid var(--ln); scroll-margin-top: 44px; }
-.img { position: sticky; top: 52px; align-self: start; }
+          padding-block: 24px; border-bottom: 1px solid var(--ln); scroll-margin-top: 56px; }
+.img { position: sticky; top: 56px; align-self: start; }
 .img img { display: block; width: 100%; height: auto; border: 1px solid var(--ln); border-radius: 6px; }
 .tiempo { font: 600 13px/1.4 ui-monospace, Consolas, monospace; color: var(--acc); margin: 0 0 10px; }
 .tiempo span { color: var(--mut); font-weight: 400; }
@@ -33,25 +45,40 @@ p { margin: 0 0 12px; }
 p small { color: var(--mut); font: 11px ui-monospace, Consolas, monospace; margin-right: 6px; }
 p b { margin-right: 4px; }
 .vacio { color: var(--mut); font-style: italic; }
-p span[id] { scroll-margin-top: 64px; }
-span:target { background: var(--marca); border-radius: 3px; }
+span[data-t] { scroll-margin-top: 72px; border-radius: 3px; }
+span:target { background: var(--marca); }
+body.con-medio span[data-t] { cursor: pointer; }
+body.con-medio span[data-t]:hover { text-decoration: underline dotted var(--mut); }
+span.actual { background: var(--actual); }
+.coincide { background: var(--marca); }
+.coincide-actual { outline: 2px solid var(--acc); outline-offset: 1px; }
+::highlight(busqueda) { background: var(--marca); color: inherit; }
+@supports selector(::highlight(x)) { .coincide { background: none; } }  /* se marcan solo las palabras */
 details.ocr { margin: 0 0 14px; font-size: .85rem; color: var(--mut); }
 details.ocr summary { cursor: pointer; }
 details.ocr div { margin-top: 6px; padding: 8px 12px; background: var(--panel); border: 1px solid var(--ln);
                   border-radius: 6px; white-space: pre-line; font: 12px/1.5 ui-monospace, Consolas, monospace; }
-@media (max-width: 900px) { section { grid-template-columns: 1fr; } .img { position: static; } }
+#reproductor { position: fixed; z-index: 3; background: var(--panel); border: 1px solid var(--ln);
+               border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.18); overflow: hidden; }
+#reproductor.video { bottom: 16px; right: 16px; width: min(400px, calc(100vw - 32px)); }
+body.con-capturas #reproductor.video { right: auto; left: 16px; }
+#reproductor.audio { left: 0; right: 0; bottom: 0; border-radius: 0; }
+#reproductor .barra { display: flex; gap: 8px; align-items: center; padding: 6px 10px; font-size: 13px; color: var(--mut); }
+#reproductor .barra .titulo { flex: 1; }
+#reproductor video { display: block; width: 100%; background: #000; }
+#reproductor audio { display: block; width: 100%; }
+#reproductor.mini video { display: none; }
+#sin-medio { margin: 0; padding: 8px 10px; font-size: 13px; }
+@media (max-width: 900px) { section { grid-template-columns: 1fr; } .img { position: static; }
+                            body.con-capturas #reproductor.video { left: auto; right: 16px; } }
 </style>
 </head>
-<body>
+<body class="con-capturas">
 <header><h1>Revisión de lanzamiento · Mesa Lista</h1><p class="meta">Duración 00:05:40 · 5 capturas de pantalla · texto de las capturas por OCR · 25 segmentos · transcripción importada · hablantes: Ana Torres, Luis Méndez, Sofía Ramírez</p>
 <p class="nota">Demostración con datos ficticios: transcripción importada de un .vtt con hablantes y pantallas generadas por dev/generar_demo.py.</p>
 </header>
-<nav>
-<a href="#c0001">00:00:00</a>
-<a href="#c0002">00:00:58</a>
-<a href="#c0003">00:02:08</a>
-<a href="#c0004">00:03:25</a>
-<a href="#c0005">00:04:45</a>
+<nav><div class="herramientas"><input type="search" id="buscar" placeholder="Buscar en lo dicho y en pantalla" aria-label="Buscar"><button type="button" id="anterior" title="Anterior (Mayús+Enter)" aria-label="Resultado anterior">‹</button><button type="button" id="siguiente" title="Siguiente (Enter)" aria-label="Resultado siguiente">›</button><span id="conteo" aria-live="polite"></span><select id="hablante" aria-label="Filtrar por hablante"><option value="">Todos los hablantes</option><option value="Ana Torres">Ana Torres</option><option value="Luis Méndez">Luis Méndez</option><option value="Sofía Ramírez">Sofía Ramírez</option></select></div>
+<div class="tiempos"><a href="#c0001">00:00:00</a><a href="#c0002">00:00:58</a><a href="#c0003">00:02:08</a><a href="#c0004">00:03:25</a><a href="#c0005">00:04:45</a></div>
 </nav>
 <main>
 <section id="c0001">
@@ -64,10 +91,10 @@ Error en la confirmación por SMS
 Diseño de la pantalla de reserva
 Fecha de lanzamiento
 Equipo Mesa Lista· noviembre 2026</div></details>
-<p><small>00:00:03</small><b style="color:var(--h0)">Ana Torres:</b><span id="t3">Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista.</span> <span id="t9">Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.</span></p>
-<p><small>00:00:19</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t19">Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.</span></p>
-<p><small>00:00:28</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t28">Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.</span></p>
-<p><small>00:00:38</small><b style="color:var(--h0)">Ana Torres:</b><span id="t38">Bien. Empecemos con las métricas, que son buenas noticias.</span></p>
+<p data-hablante="Ana Torres"><small>00:00:03</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="3.00" id="t3">Buenos días. Gracias por conectarse; es la revisión de lanzamiento de Mesa Lista.</span> <span data-t="9.00" id="t9">Comparto la agenda: métricas de la beta, el error de los SMS, el diseño de la pantalla de reserva y la fecha de lanzamiento.</span></p>
+<p data-hablante="Luis Méndez"><small>00:00:19</small><b style="color:var(--h1)">Luis Méndez:</b><span data-t="19.00" id="t19">Perfecto. Yo traigo los números del error de confirmación, así que me toca el segundo punto.</span></p>
+<p data-hablante="Sofía Ramírez"><small>00:00:28</small><b style="color:var(--h2)">Sofía Ramírez:</b><span data-t="28.00" id="t28">Y yo tengo la propuesta del botón de confirmar, la que vimos el jueves.</span></p>
+<p data-hablante="Ana Torres"><small>00:00:38</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="38.00" id="t38">Bien. Empecemos con las métricas, que son buenas noticias.</span></p>
 </div></section>
 <section id="c0002">
 <div class="img"><a href="capturas/0002_00-00-58.jpg" target="_blank"><img src="capturas/0002_00-00-58.jpg" alt="Captura 0002 en 00:00:58" loading="lazy"></a></div>
@@ -89,11 +116,11 @@ S4
 S5
 S6
 Equipo Mesa Lista· noviembre 2026</div></details>
-<p><small>00:00:58</small><b style="color:var(--h0)">Ana Torres:</b><span id="t58">En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.</span></p>
-<p><small>00:01:10</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t70">¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.</span></p>
-<p><small>00:01:22</small><b style="color:var(--h0)">Ana Torres:</b><span id="t82">Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.</span></p>
-<p><small>00:01:36</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t96">Propongo medirlo antes de cambiar nada, para no adivinar.</span></p>
-<p><small>00:01:50</small><b style="color:var(--h0)">Ana Torres:</b><span id="t110">De acuerdo, lo anoto como pendiente mío.</span></p>
+<p data-hablante="Ana Torres"><small>00:00:58</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="58.00" id="t58">En seis semanas de beta pasamos de ciento veinte a cuatrocientas diez reservas por semana.</span></p>
+<p data-hablante="Luis Méndez"><small>00:01:10</small><b style="color:var(--h1)">Luis Méndez:</b><span data-t="70.00" id="t70">¿Y la cancelación? La semana pasada estaba arriba del quince por ciento.</span></p>
+<p data-hablante="Ana Torres"><small>00:01:22</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="82.00" id="t82">Bajó al doce. Creemos que ayudó el recordatorio de un día antes, pero no lo hemos medido por separado.</span></p>
+<p data-hablante="Sofía Ramírez"><small>00:01:36</small><b style="color:var(--h2)">Sofía Ramírez:</b><span data-t="96.00" id="t96">Propongo medirlo antes de cambiar nada, para no adivinar.</span></p>
+<p data-hablante="Ana Torres"><small>00:01:50</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="110.00" id="t110">De acuerdo, lo anoto como pendiente mío.</span></p>
 </div></section>
 <section id="c0003">
 <div class="img"><a href="capturas/0003_00-02-08.jpg" target="_blank"><img src="capturas/0003_00-02-08.jpg" alt="Captura 0003 en 00:02:08" loading="lazy"></a></div>
@@ -115,10 +142,10 @@ SmsTimeoutError: el proveedor no respondió en 10 s
 200 sms enviado
 Últimos 7 días
 38 fallos de 1 240 envíos (3.1 %)</div></details>
-<p><small>00:02:08</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t128">Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación.</span> <span id="t142">Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.</span></p>
-<p><small>00:02:36</small><b style="color:var(--h0)">Ana Torres:</b><span id="t156">¿Qué propones?</span></p>
-<p><small>00:02:42</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t162">Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.</span></p>
-<p><small>00:03:00</small><b style="color:var(--h0)">Ana Torres:</b><span id="t180">Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.</span></p>
+<p data-hablante="Luis Méndez"><small>00:02:08</small><b style="color:var(--h1)">Luis Méndez:</b><span data-t="128.00" id="t128">Va el error. De mil doscientos cuarenta envíos, treinta y ocho fallaron: el proveedor de SMS no responde en diez segundos y el cliente se queda sin confirmación.</span> <span data-t="142.00" id="t142">Es el tres por ciento, pero quien no recibe el SMS cree que no reservó y llama al restaurante.</span></p>
+<p data-hablante="Ana Torres"><small>00:02:36</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="156.00" id="t156">¿Qué propones?</span></p>
+<p data-hablante="Luis Méndez"><small>00:02:42</small><b style="color:var(--h1)">Luis Méndez:</b><span data-t="162.00" id="t162">Reintentar una vez a los treinta segundos y, si vuelve a fallar, mandar la confirmación por correo. Lo tengo listo antes del dieciocho.</span></p>
+<p data-hablante="Ana Torres"><small>00:03:00</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="180.00" id="t180">Hecho. Queda acordado: reintento y respaldo por correo, Luis, antes del dieciocho.</span></p>
 </div></section>
 <section id="c0004">
 <div class="img"><a href="capturas/0004_00-03-25.jpg" target="_blank"><img src="capturas/0004_00-03-25.jpg" alt="Captura 0004 en 00:03:25" loading="lazy"></a></div>
@@ -137,10 +164,10 @@ Propuesta
 Subirlo debajo de «Personas»
 y dejarlo fijo al hacer scroll.
 pliegue</div></details>
-<p><small>00:03:25</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t205">Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve.</span> <span id="t220">Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.</span></p>
-<p><small>00:03:55</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t235">Por mí bien; es solo de la interfaz, no toca la API.</span></p>
-<p><small>00:04:08</small><b style="color:var(--h0)">Ana Torres:</b><span id="t248">Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?</span></p>
-<p><small>00:04:20</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t260">Sí, para el viernes.</span></p>
+<p data-hablante="Sofía Ramírez"><small>00:03:25</small><b style="color:var(--h2)">Sofía Ramírez:</b><span data-t="205.00" id="t205">Esta es la pantalla de reserva. En teléfonos chicos el botón de confirmar queda debajo del pliegue y la gente no lo ve.</span> <span data-t="220.00" id="t220">Mi propuesta es subirlo justo debajo del selector de personas y dejarlo fijo.</span></p>
+<p data-hablante="Luis Méndez"><small>00:03:55</small><b style="color:var(--h1)">Luis Méndez:</b><span data-t="235.00" id="t235">Por mí bien; es solo de la interfaz, no toca la API.</span></p>
+<p data-hablante="Ana Torres"><small>00:04:08</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="248.00" id="t248">Me gusta. Sofía, ¿lo puedes tener para la próxima versión de prueba?</span></p>
+<p data-hablante="Sofía Ramírez"><small>00:04:20</small><b style="color:var(--h2)">Sofía Ramírez:</b><span data-t="260.00" id="t260">Sí, para el viernes.</span></p>
 </div></section>
 <section id="c0005">
 <div class="img"><a href="capturas/0005_00-04-45.jpg" target="_blank"><img src="capturas/0005_00-04-45.jpg" alt="Captura 0005 en 00:04:45" loading="lazy"></a></div>
@@ -159,12 +186,111 @@ Botón de confirmar fijo
 Si no: se mueve una semana
 Sofía (viernes)
 Equipo Mesa Lista· noviembre 2026</div></details>
-<p><small>00:04:45</small><b style="color:var(--h0)">Ana Torres:</b><span id="t285">Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.</span></p>
-<p><small>00:05:00</small><b style="color:var(--h1)">Luis Méndez:</b><span id="t300">¿Y si no está listo?</span></p>
-<p><small>00:05:06</small><b style="color:var(--h0)">Ana Torres:</b><span id="t306">Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.</span></p>
-<p><small>00:05:20</small><b style="color:var(--h2)">Sofía Ramírez:</b><span id="t320">Entonces revisamos el estado el diecinueve, ¿les parece?</span></p>
-<p><small>00:05:30</small><b style="color:var(--h0)">Ana Torres:</b><span id="t330">Perfecto. Revisión el diecinueve. Gracias a los dos.</span></p>
+<p data-hablante="Ana Torres"><small>00:04:45</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="285.00" id="t285">Último punto: la fecha. Si el reintento de SMS está listo el dieciocho, lanzamos el veintisiete de noviembre.</span></p>
+<p data-hablante="Luis Méndez"><small>00:05:00</small><b style="color:var(--h1)">Luis Méndez:</b><span data-t="300.00" id="t300">¿Y si no está listo?</span></p>
+<p data-hablante="Ana Torres"><small>00:05:06</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="306.00" id="t306">Movemos el lanzamiento una semana. No quiero salir con clientes sin confirmación.</span></p>
+<p data-hablante="Sofía Ramírez"><small>00:05:20</small><b style="color:var(--h2)">Sofía Ramírez:</b><span data-t="320.00" id="t320">Entonces revisamos el estado el diecinueve, ¿les parece?</span></p>
+<p data-hablante="Ana Torres"><small>00:05:30</small><b style="color:var(--h0)">Ana Torres:</b><span data-t="330.00" id="t330">Perfecto. Revisión el diecinueve. Gracias a los dos.</span></p>
 </div></section>
 </main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const frases = [...document.querySelectorAll('span[data-t]')];
+
+  // ── Búsqueda: todas las palabras, sin acentos ni mayúsculas, en lo dicho y en el texto de las capturas.
+  const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const objetivos = [...frases, ...document.querySelectorAll('details.ocr > div')];
+  const textos = objetivos.map(el => norm(el.textContent));
+  const buscar = $('buscar'), conteo = $('conteo');
+  let hallados = [], pos = -1, espera;
+  const visible = el => { const p = el.closest('p'); return !p || !p.hidden; };
+  // Rangos de cada palabra buscada dentro de un elemento (para ::highlight), sin tocar el HTML.
+  function rangos(el, palabras) {
+    const salida = [], recorrido = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let nodo; (nodo = recorrido.nextNode());) {
+      let plano = '';
+      const mapa = [];
+      for (let i = 0; i < nodo.data.length; i++) for (const c of norm(nodo.data[i])) { plano += c; mapa.push(i); }
+      for (const w of palabras) {
+        for (let k = plano.indexOf(w); k >= 0; k = plano.indexOf(w, k + w.length)) {
+          const r = new Range();
+          r.setStart(nodo, mapa[k]);
+          r.setEnd(nodo, mapa[k + w.length - 1] + 1);
+          salida.push(r);
+        }
+      }
+    }
+    return salida;
+  }
+  function buscarAhora() {
+    hallados.forEach(el => el.classList.remove('coincide', 'coincide-actual'));
+    const palabras = norm(buscar.value).split(/\s+/).filter(Boolean);
+    hallados = palabras.length ? objetivos.filter((el, i) => visible(el) && palabras.every(w => textos[i].includes(w))) : [];
+    hallados.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+    hallados.forEach(el => el.classList.add('coincide'));
+    if (window.CSS && CSS.highlights) CSS.highlights.set('busqueda', new Highlight(...hallados.flatMap(el => rangos(el, palabras))));
+    pos = -1;
+    conteo.textContent = !palabras.length ? '' : hallados.length ? '' : 'sin resultados';
+    if (hallados.length) mover(1);
+  }
+  function mover(paso) {
+    if (!hallados.length) return;
+    if (hallados[pos]) hallados[pos].classList.remove('coincide-actual');
+    pos = (pos + paso + hallados.length) % hallados.length;
+    const el = hallados[pos], det = el.closest('details');
+    if (det) det.open = true;
+    el.classList.add('coincide-actual');
+    el.scrollIntoView({block: 'center'});
+    conteo.textContent = (pos + 1) + ' de ' + hallados.length;
+  }
+  buscar.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(buscarAhora, 200); });
+  buscar.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); mover(e.shiftKey ? -1 : 1); } });
+  $('anterior').addEventListener('click', () => mover(-1));
+  $('siguiente').addEventListener('click', () => mover(1));
+
+  // ── Filtro por hablante.
+  const hablante = $('hablante');
+  if (hablante) hablante.addEventListener('change', () => {
+    document.querySelectorAll('p[data-hablante]').forEach(p => { p.hidden = !!hablante.value && p.dataset.hablante !== hablante.value; });
+    if (buscar.value) buscarAhora();
+  });
+
+  // ── Reproductor: clic en una frase salta a ese momento; la frase que suena se resalta y se sigue.
+  const medio = $('medio');
+  if (!medio) return;
+  document.body.classList.add('con-medio');
+  const tiempos = frases.map(s => +s.dataset.t), seguir = $('seguir');
+  const ir = (t, reproducir) => { medio.currentTime = t; if (reproducir) medio.play().catch(() => {}); };
+  document.querySelector('main').addEventListener('click', e => {
+    const s = e.target.closest('span[data-t]');
+    if (s && !String(window.getSelection())) ir(+s.dataset.t, true);
+  });
+  let actual = null;
+  medio.addEventListener('timeupdate', () => {
+    let lo = 0, hi = tiempos.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (tiempos[m] <= medio.currentTime + 0.05) lo = m + 1; else hi = m; }
+    const s = frases[Math.max(lo - 1, 0)];
+    if (!s || s === actual) return;
+    if (actual) actual.classList.remove('actual');
+    s.classList.add('actual');
+    actual = s;
+    if (seguir.checked && !medio.paused && visible(s)) s.scrollIntoView({block: 'center', behavior: 'smooth'});
+  });
+  // Quien hace scroll a mano quiere leer otra cosa: se deja de seguir.
+  ['wheel', 'touchmove'].forEach(ev => window.addEventListener(ev, () => { seguir.checked = false; }, {passive: true}));
+  const desdeAncla = () => { const m = location.hash.match(/^#t(\d+)$/); if (m) ir(+m[1], false); };
+  if (medio.readyState >= 1) desdeAncla(); else medio.addEventListener('loadedmetadata', desdeAncla, {once: true});
+  window.addEventListener('hashchange', desdeAncla);
+  medio.addEventListener('error', () => { $('sin-medio').hidden = false; medio.hidden = true; });
+  const mini = $('mini');
+  if (mini) mini.addEventListener('click', () => {
+    const r = $('reproductor'), achicar = !r.classList.contains('mini');
+    r.classList.toggle('mini', achicar);
+    mini.textContent = achicar ? '▢' : '–';
+    mini.title = achicar ? 'Mostrar el video' : 'Ocultar el video (sigue sonando)';
+  });
+})();
+</script>
 </body>
 </html>

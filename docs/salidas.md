@@ -143,9 +143,11 @@ El manifiesto de la reunión: con qué se procesó y qué pasos están hechos. P
 ## `transcripcion-ilustrada.html`
 
 - Un solo archivo con tema claro y oscuro automático.
+- Arriba, una barra para buscar en lo dicho y en el texto de las capturas (todas las palabras, sin importar acentos ni mayúsculas; Enter y Mayús+Enter recorren los resultados) y, si hay varios hablantes, un filtro por hablante.
+- Con grabación, un reproductor fijo: clic en una frase y la grabación salta a ese momento; la frase que suena se resalta y se sigue hasta que haces scroll a mano. La grabación se enlaza con una ruta relativa, no se copia. Los enlaces `#t285` de la minuta también la dejan en ese momento.
 - Con capturas: cada sección pone la imagen a la izquierda y lo dicho a la derecha, con una barra de tiempos para saltar. Bajo el tiempo de cada sección, el texto de la captura en un bloque desplegable: la búsqueda del navegador (Ctrl+F) lo encuentra. Las capturas repetidas enlazan a la original.
 - Sin capturas: solo la transcripción.
-- Cada frase lleva un ancla con su segundo (`#t285`): `minuta.md` enlaza ahí y el navegador la resalta.
+- Cada frase lleva su segundo (`data-t`) y un ancla (`#t285`): `minuta.md` enlaza ahí y el navegador la resalta.
 - Necesita la carpeta `capturas/` al lado, salvo que se genere con `--incrustar`.
 
 ## `minuta.json` y `minuta.md`
@@ -168,6 +170,14 @@ Claude redacta `minuta.json`, la fuente única de la minuta: participantes, acue
 ```
 
 `minutas.py minuta <salida>` la valida, busca cada cita en la transcripción (de 30 s antes a 90 s después del momento) y en el texto de la captura citada, y genera `minuta.md`. Reporta las citas que no cuadran (en otro minuto, reescritas, inexistentes) y el pie de la minuta dice cuántas se verificaron. El formato completo está en [references/minuta.md](../skills/procesar-reunion/references/minuta.md). Ver el [ejemplo](ejemplo/minuta.json) y [su minuta](ejemplo/minuta.md).
+
+## `minuta.pdf`, `minuta.docx` y `pendientes.csv`
+
+Los genera `minutas.py exportar <salida> [pdf] [docx] [csv]` desde `minuta.json`, solo si se piden. Tienen el contenido de `minuta.md` sin enlaces a archivos locales: quien los recibe no tiene la transcripción ilustrada, así que los minutos y las capturas van como texto.
+
+- `minuta.pdf`: tamaño carta, impreso por Edge o Chrome en modo headless.
+- `minuta.docx`: con estilos de Word (título, encabezados, tablas con cuadrícula), editable.
+- `pendientes.csv`: UTF-8 con BOM y comas, una fila por pendiente con `#`, `Pendiente`, `Responsable`, `Fecha`, `Minuto`, `Cita` e `Inferido`.
 
 ## `contexto-<tema>.md`
 

@@ -102,3 +102,7 @@ Revisa en minuta.json:
 - **Código 0:** todo cuadra. **Código 1:** hay evidencia que revisar, y `minuta.md` se generó igual. **Código 2:** `minuta.json` no es válida (clave desconocida, campo faltante, tiempo mal escrito) y no se generó nada.
 - Corrige lo que reporte y vuelve a correrlo. Si una cita no se puede hacer textual (la idea se dijo en varios momentos), quítala y deja solo `t`, o marca el elemento como inferido.
 - El pie de `minuta.md` dice cuántas citas se verificaron: no lo escondas.
+
+## Exportar
+
+`minutas.py exportar "<salida>" [pdf] [docx] [csv]` genera, desde `minuta.json`, `minuta.pdf`, `minuta.docx` y `pendientes.csv` (sin formatos, los tres). Llevan el mismo contenido que `minuta.md`, sin enlaces a archivos locales. El CSV trae por pendiente: responsable, fecha, minuto, cita y si es inferido.

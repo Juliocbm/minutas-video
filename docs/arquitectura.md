@@ -40,6 +40,8 @@ flowchart LR
     T --> MV
     OJ --> MV
     MV --> M[minuta.md]
+    MJ --> EX{{minutas.py exportar}}
+    EX --> D[minuta.pdf · minuta.docx<br/>pendientes.csv]
 ```
 
 `minutas.py` corre la transcripción y las capturas en paralelo, cada una en un proceso aparte con sus propias dependencias. En cuanto terminan las capturas, arranca el OCR mientras sigue la transcripción. Después corre el glosario (en el mismo proceso, sin dependencias) y la transcripción ilustrada. Un fallo del OCR no detiene el HTML: sale sin el texto de las capturas.
@@ -54,6 +56,7 @@ flowchart LR
 | `extraer_capturas.py` | No es IA: compara imágenes | En tu máquina | Gratis |
 | `ocr_capturas.py` (RapidOCR) | IA de reconocimiento de texto en imágenes | En tu máquina (CPU) | Gratis; el modelo viene en el paquete |
 | `minutas.py minuta` | No es IA: valida, busca cada cita y arma el Markdown | En tu máquina | Gratis |
+| `minutas.py exportar`, `exportar_docx.py` | No es IA: arma PDF (con Edge o Chrome), Word y CSV | En tu máquina | Gratis |
 | `hojas_contacto.py`, `armar_html.py` | No es IA: arma archivos | En tu máquina | Gratis |
 | `minuta.json` y contexto | IA (Claude): entiende, sintetiza y contrasta | En la nube (Anthropic) | Usa tu plan de Claude |
 
@@ -72,6 +75,9 @@ Whisper convierte audio en texto, pero no entiende la reunión. La parte que dis
 - **El glosario no reescribe la transcripción.** Anota dónde aparece cada variante mal escrita y deja el texto fiel al audio. La corrección se hace en la minuta, con evidencia, y el HTML lleva la nota.
 - **Pantallas repetidas por SSIM, sin hash perceptual.** Con una reunión real, las repeticiones dieron una similitud estructural de 0.98 a 0.996 y la pantalla distinta más parecida, 0.95; el hash perceptual daba 3 bits de distancia entre páginas distintas de un mismo documento. La captura repetida se guarda igual, para que un cambio pequeño (un dato en una tabla) no se pierda: solo se evita revisarla y leerla dos veces.
 - **OCR en CPU con el modelo del paquete.** RapidOCR 3.10 trae PP-OCRv6 multilingüe (incluye español), así que no descarga modelos ni hace falta un respaldo. Los ajustes por defecto fueron los mejores: reducir la imagen o agrandar los lotes perdía texto o tardaba más. Para leer, `capturas.txt` muestra solo lo nuevo de cada captura: en la reunión real, el 30 % de las líneas.
+- **El reproductor enlaza, no copia.** Chrome y Edge reproducen desde el disco las grabaciones `.mkv` de OBS (H.264 y AAC) y saltan a cualquier minuto al instante, así que el HTML apunta a la grabación con una ruta relativa. Copiarla o convertirla duplicaría cientos de megabytes por reunión.
+- **Búsqueda sin dependencias.** Para unos cientos de frases bastan unas líneas de JavaScript (todas las palabras, sin acentos), y la API de resaltado de CSS marca las palabras sin tocar el HTML. Una biblioteca de búsqueda no aportaba nada a ese tamaño.
+- **Exportar sin enlaces.** El PDF y el Word se mandan a otras personas, que no tienen la transcripción ilustrada: los minutos y las capturas van como texto. Ambos salen del mismo Markdown que `minuta.md`, generado con otra opción, para que digan lo mismo. El PDF lo imprime el navegador; el Word, python-docx.
 - **La minuta como datos.** Claude escribe `minuta.json` y un script genera `minuta.md`. Así la evidencia de cada acuerdo es verificable por una máquina: la cita se busca cerca de su momento (con tolerancia a muletillas omitidas, saltos con «…» y términos del glosario) y se reporta lo que no cuadra. El mismo archivo servirá para exportar a otros formatos sin volver a redactar.
 
 ## Dónde quedan las cosas

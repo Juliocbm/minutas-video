@@ -19,6 +19,8 @@
   minutas.py minuta <salida>
       Valida minuta.json, verifica cada cita contra la transcripción y el texto de las capturas, y
       genera minuta.md.
+  minutas.py exportar <salida> [pdf] [docx] [csv]
+      La minuta para compartir: minuta.pdf, minuta.docx y pendientes.csv (por defecto, los tres).
 
 En una terminal muestra barras de progreso. Cuando la salida no es una terminal (por ejemplo, la
 lanza Claude), imprime solo hitos: inicio y fin de cada paso, y avances del 25, 50 y 75 %.
@@ -39,6 +41,7 @@ from datetime import datetime
 from pathlib import Path
 
 import config as cfgmod
+import exportar as expmod
 import glosario as glosmod
 import minuta as minmod
 from comun import PREFIJO_PROGRESO, VERSION, configurar_consola, escribir_json, hms, leer_json, leer_transcripcion
@@ -57,7 +60,7 @@ SALIDA_DE = {"transcripcion": "transcripcion.json", "capturas": "capturas.json",
 DEPENDE = {"transcripcion": (), "capturas": (), "ocr": ("capturas",), "glosario": ("transcripcion",),
            "html": ("transcripcion", "capturas", "ocr", "glosario")}
 # Subir la versión de un paso hace que se rehaga en las reuniones ya procesadas.
-VERSION_PASO = {"transcripcion": 1, "capturas": 2, "ocr": 1, "glosario": 1, "html": 2}
+VERSION_PASO = {"transcripcion": 1, "capturas": 2, "ocr": 1, "glosario": 1, "html": 3}
 EXTERNOS = ("transcripcion", "capturas", "ocr")  # pasos que corren en su propio proceso, en paralelo
 OPCIONALES = ("ocr",)  # si fallan, lo que depende de ellos se hace igual, sin su resultado
 HITOS = (25, 50, 75)
@@ -236,6 +239,8 @@ def planear(ruta, a, rec):
         html += ["--nota", opciones["nota"]]
     if opciones.get("incrustar"):
         html.append("--incrustar")
+    if tipo in ("video", "audio"):  # reproductor: el HTML enlaza la grabación, no la copia
+        html += ["--medio", str(ruta)]
     # Si ya no hay capturas u OCR (cambió el modo), que el HTML no muestre los archivos que quedaron.
     if "capturas" not in pasos:
         html.append("--sin-capturas")
@@ -691,6 +696,10 @@ def main():
     pm = sub.add_parser("minuta", help="valida minuta.json, verifica la evidencia y genera minuta.md")
     pm.add_argument("salida")
 
+    pe = sub.add_parser("exportar", help="exporta la minuta a PDF, Word y CSV de pendientes")
+    pe.add_argument("salida")
+    pe.add_argument("formatos", nargs="*", help=f"{', '.join(expmod.FORMATOS)} (por defecto, todos)")
+
     a = p.parse_args()
 
     if a.comando == "seguir":
@@ -716,6 +725,18 @@ def main():
 
     if a.comando == "minuta":
         sys.exit(minmod.comando(Path(a.salida)))
+
+    if a.comando == "exportar":
+        malos = [f for f in a.formatos if f not in expmod.FORMATOS]
+        if malos:
+            raise SystemExit(f"Formatos desconocidos: {', '.join(malos)}. Válidos: {', '.join(expmod.FORMATOS)}.")
+
+        def correr_docx(salida):
+            r = subprocess.run([localizar_uv(), "run", "--script", str(DIR / "exportar_docx.py"), str(salida)],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+            return r.returncode, r.stdout + r.stderr
+        sys.exit(expmod.comando(Path(a.salida), a.formatos or list(expmod.FORMATOS), correr_docx))
 
     entradas = expandir(a.entradas)
     if len(entradas) > 1 and (a.salida or a.transcripcion):

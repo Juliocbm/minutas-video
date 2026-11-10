@@ -341,30 +341,37 @@ def fecha_larga(fecha, hora):
 
 
 class Render:
-    def __init__(self, minuta, ctx, resultado):
-        self.m, self.ctx, self.res = minuta, ctx, resultado
+    """Markdown de la minuta. Con enlaces=False (para exportar y compartir), los minutos y las capturas
+    van como texto: quien recibe el documento no tiene la transcripción ilustrada ni las capturas."""
+
+    def __init__(self, minuta, ctx, resultado, enlaces=True):
+        self.m, self.ctx, self.res, self.enlaces = minuta, ctx, resultado, enlaces
         self.larga = ctx.duracion >= 3600
 
     def enlace_tiempo(self, seg):
+        if not self.enlaces:
+            return tiempo_corto(seg, self.larga)
         anclas = self.ctx.segundos_ancla
         i = bisect.bisect_right(anclas, int(seg)) - 1
         destino = anclas[max(i, 0)] if anclas else int(seg)
         return f"[{tiempo_corto(seg, self.larga)}](transcripcion-ilustrada.html#{ancla(destino)})"
 
-    def enlace_captura(self, n):
+    def enlace_captura(self, n, etiqueta=False):
         c = self.ctx.capturas.get(n)
+        if not self.enlaces:  # en una tabla la columna ya dice «Captura»
+            return f"captura {n:04}" if etiqueta else f"{n:04}"
         return f"[{n:04}]({c['archivo']})" if c else f"{n:04}"
 
     def tiempos(self, el):
         vistos = sorted({segundos(ev["t"]) for ev in el.get("evidencia") or []})
         return ", ".join(self.enlace_tiempo(t) for t in vistos)
 
-    def capturas(self, el):
+    def capturas(self, el, etiqueta=False):
         ns = sorted({ev["captura"] for ev in el.get("evidencia") or [] if ev.get("captura") is not None})
-        return ", ".join(self.enlace_captura(n) for n in ns)
+        return ", ".join(self.enlace_captura(n, etiqueta) for n in ns)
 
     def refs(self, el):
-        partes = [x for x in (self.tiempos(el), self.capturas(el)) if x]
+        partes = [x for x in (self.tiempos(el), self.capturas(el, etiqueta=True)) if x]
         texto = f" ({' · '.join(partes)})" if partes else ""
         return texto + (" *(inferido)*" if el.get("inferido") else "")
 
@@ -398,7 +405,8 @@ class Render:
         partes = ([] if solo else ["grabación"]) + [trans] + (["capturas"] if self.ctx.capturas else [])
         texto = partes[0] if len(partes) == 1 else ", ".join(partes[:-1]) + " y " + partes[-1]
         minutos = "los de la transcripción" if solo else "de la grabación"
-        return (f"**Fuente:** {texto} ([transcripción ilustrada](transcripcion-ilustrada.html)). "
+        ilustrada = " ([transcripción ilustrada](transcripcion-ilustrada.html))" if self.enlaces else ""
+        return (f"**Fuente:** {texto}{ilustrada}. "
                 f"Los minutos son {minutos}.")
 
     def participantes_lista(self):
@@ -517,8 +525,9 @@ class Render:
 
 # ───────────────────────── comando ─────────────────────────
 
-def procesar(salida):
-    """Valida, verifica y genera minuta.md. Devuelve un dict con el resultado (ver comando())."""
+def preparar(salida):
+    """Lee, valida y verifica minuta.json. Devuelve (minuta, ctx, resultado) o un dict de error con
+    "estado" ("falta" o "invalida") y "errores"."""
     salida = Path(salida)
     ruta = salida / "minuta.json"
     if not ruta.exists():
@@ -531,7 +540,16 @@ def procesar(salida):
     if errores:
         return {"estado": "invalida", "errores": errores}
     ctx = Contexto(salida, minuta)
-    resultado = verificar(minuta, ctx)
+    return minuta, ctx, verificar(minuta, ctx)
+
+
+def procesar(salida):
+    """Valida, verifica y genera minuta.md. Devuelve un dict con el resultado (ver comando())."""
+    salida = Path(salida)
+    preparada = preparar(salida)
+    if isinstance(preparada, dict):
+        return preparada
+    minuta, ctx, resultado = preparada
     destino = salida / "minuta.md"
     destino.write_text(Render(minuta, ctx, resultado).markdown(), encoding="utf-8")
     conteo = {s: len(minuta.get(s) or []) for s in ("acuerdos", "temas", "pendientes", "preguntas", "riesgos", "diferencias")}

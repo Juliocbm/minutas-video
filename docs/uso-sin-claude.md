@@ -37,6 +37,7 @@ uv run --script minutas.py seguir "reunion_minuta"   # barra de progreso de un p
 uv run --script minutas.py config                     # configuración efectiva y de dónde sale cada valor
 uv run --script minutas.py glosario "reunion_minuta"  # vuelve a buscar los términos del glosario
 uv run --script minutas.py minuta "reunion_minuta"    # valida minuta.json, verifica las citas y genera minuta.md
+uv run --script minutas.py exportar "reunion_minuta"  # minuta.pdf, minuta.docx y pendientes.csv (o solo los que indiques)
 ```
 
 ## Paso a paso

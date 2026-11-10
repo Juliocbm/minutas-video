@@ -79,6 +79,16 @@ Al equipo le falta memoria. Suele pasar con muchos programas abiertos o con dos 
 
 **"no aparece en la transcripción".** Puede venir de la pantalla: indica la captura y cópiala de `capturas.txt`. Si no hay respaldo textual, quita la cita o marca el elemento como `"inferido": true`.
 
+## Transcripción ilustrada y exportaciones
+
+**El reproductor dice que no pudo abrir la grabación.** El HTML enlaza la grabación (no la copia), con una ruta relativa a la carpeta de salida. Si moviste la grabación o la carpeta, vuelve a correr `minutas.py procesar` con la ruta nueva. Las grabaciones `.mkv` de OBS se reproducen en Edge y Chrome; Firefox puede no abrirlas.
+
+**El PDF no se genera ("No se encontró Edge ni Chrome").** El PDF lo imprime un navegador basado en Chromium en modo headless. Instala Edge o Chrome, o usa el Word.
+
+**La primera exportación a Word tarda.** uv instala python-docx la primera vez; luego queda en caché.
+
+**Excel muestra mal los acentos del CSV.** `pendientes.csv` va en UTF-8 con BOM, que Excel reconoce al abrirlo con doble clic. Si lo importas a mano, elige UTF-8.
+
 ## Otros
 
 **Acentos raros en la consola.** Los scripts fuerzan UTF-8 en su salida. Si los archivos se ven mal, ábrelos como UTF-8.

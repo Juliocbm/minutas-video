@@ -39,8 +39,9 @@ Le pasas a Claude la grabación de una junta y te devuelve:
 
 - **La transcripción** con marcas de tiempo (`.txt` y `.srt`), hecha en tu máquina.
 - **Capturas** automáticas cada vez que cambia lo que se muestra en pantalla, con **su texto** (OCR) para buscarlo y citarlo. Si la pantalla vuelve a algo ya visto, la captura queda marcada como repetida.
-- **Una transcripción ilustrada** en HTML: cada captura junto a lo que se dijo mientras estuvo visible. Así "como ven aquí…" vuelve a tener sentido.
+- **Una transcripción ilustrada** en HTML: cada captura junto a lo que se dijo mientras estuvo visible. Así "como ven aquí…" vuelve a tener sentido. Se puede buscar en lo dicho y en pantalla, filtrar por hablante y, con un clic en cualquier frase, escuchar ese momento de la grabación.
 - **Una minuta** con acuerdos, temas y pendientes, cada uno con su minuto, su captura y la cita textual que lo respalda. Antes de entregarla, cada cita se verifica contra la transcripción, y cada minuto enlaza a la frase exacta. Si le das documentos relacionados, señala qué cambió la reunión respecto a lo escrito.
+- Opcional: **la minuta en PDF o Word** para compartirla, y **los pendientes en CSV** para Excel o Jira.
 - Opcional: **un paquete de contexto** para pegarle lo acordado a otra sesión de Claude, por ejemplo la que implementa lo que se decidió.
 
 Funciona con cualquier grabación: videollamadas (Teams, Zoom, Meet), grabaciones de pantalla (OBS), juntas presenciales o solo audio. No depende de ninguna plataforma.
@@ -116,6 +117,7 @@ Si falta algo por decidir, Claude te lo pregunta en una sola ventana de opciones
 | `reunion.json` · `progreso.json` · `_registro/` | Registro de cada paso, en local |
 | `minuta.json` · `contexto-<tema>.md` | Claude |
 | `minuta.md` | Script, a partir de `minuta.json` y tras verificar sus citas |
+| `minuta.pdf` · `minuta.docx` · `pendientes.csv` | Script, a partir de `minuta.json`, si los pides |
 
 El detalle de cada formato está en [docs/salidas.md](docs/salidas.md).
 

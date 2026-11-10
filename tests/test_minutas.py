@@ -94,6 +94,7 @@ def test_video_con_transcripcion_importada_lee_el_texto_de_las_capturas(correr_s
     html = (salida / "transcripcion-ilustrada.html").read_text(encoding="utf-8")
     assert "Texto en pantalla" in html and 'igual a la <a href="#c0001">0001</a>' in html
     assert 'id="t3"' in html  # ancla de la primera frase, a la que enlaza minuta.md
+    assert '<video id="medio" controls preload="metadata" src="../reunion-demo.mp4">' in html
 
     # Sin OCR, el HTML se rehace sin el texto de las capturas.
     r = correr_script("minutas.py", "procesar", video.name, "--no-ocr")
@@ -118,3 +119,14 @@ def test_comando_minuta(correr_script, tmp_path):
     r = correr_script("minutas.py", "minuta", salida)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "20 de 20 citas verificadas" in r.stdout and (salida / "minuta.md").exists()
+
+
+def test_comando_exportar_csv_y_formato_desconocido(correr_script, tmp_path):
+    salida = tmp_path / "ejemplo"
+    salida.mkdir()
+    for archivo in ("transcripcion.json", "capturas.json", "ocr.json", "minuta.json"):
+        shutil.copy(EJEMPLO / archivo, salida / archivo)
+    r = correr_script("minutas.py", "exportar", salida, "csv")
+    assert r.returncode == 0 and "✓ CSV" in r.stdout and (salida / "pendientes.csv").exists()
+    r = correr_script("minutas.py", "exportar", salida, "ics")
+    assert r.returncode != 0 and "Formatos desconocidos: ics" in r.stderr

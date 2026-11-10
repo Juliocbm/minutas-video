@@ -16,10 +16,11 @@ Convierte una grabación en archivos que se pueden leer, buscar y compartir. Tod
 | `capturas/` + `capturas.json` | Una imagen cada vez que cambia lo que se ve; las que repiten una pantalla anterior quedan marcadas | `minutas.py` |
 | `capturas.txt` · `ocr.json` | Texto de cada captura (OCR). `capturas.txt` trae solo lo nuevo de cada una | `minutas.py` |
 | `glosario.json` | Dónde aparecen mal escritos los términos del glosario y quién es mencionado | `minutas.py` |
-| `transcripcion-ilustrada.html` | Cada captura junto a lo que se dijo mientras estuvo visible | `minutas.py` |
+| `transcripcion-ilustrada.html` | Cada captura junto a lo que se dijo mientras estuvo visible, con búsqueda y un reproductor: clic en una frase para escucharla | `minutas.py` |
 | `reunion.json` · `progreso.json` · `_registro/` | Registro de cada paso, avance y bitácoras | `minutas.py` |
 | `minuta.json` | Acuerdos, temas y pendientes, cada uno con su evidencia (minuto, cita y captura) | Tú |
 | `minuta.md` | La minuta para leer, con enlaces al momento exacto | `minutas.py minuta`, desde `minuta.json` |
+| `minuta.pdf` · `minuta.docx` · `pendientes.csv` | La minuta para compartir y los pendientes para Excel o Jira | `minutas.py exportar`, si se pide |
 | `contexto-<tema>.md` | Paquete de contexto para otra sesión de Claude | Tú, si se pide |
 
 `minutas.py` hace todo lo mecánico y recuerda lo que ya hizo: si algo falla o cambia una opción, el mismo comando solo rehace lo necesario. Tu trabajo es acordar lo mínimo, lanzar el proceso, informar el avance, revisar y redactar.
@@ -134,6 +135,14 @@ Si hay algo que el lector del HTML deba saber además de lo que ya pone el glosa
 uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py procesar "<grabación>" --solo html --nota "<aviso para el lector>"
 ```
 
+**Para compartir** (si el usuario pide la minuta en PDF o Word, o los pendientes en Excel o para Jira):
+
+```
+uv run --script ${CLAUDE_SKILL_DIR}/scripts/minutas.py exportar "<salida>" [pdf] [docx] [csv]
+```
+
+Sin formatos genera los tres: `minuta.pdf` (lo imprime Edge o Chrome), `minuta.docx` y `pendientes.csv` (UTF-8 con BOM, abre bien en Excel). Salen de `minuta.json`, así que corre antes `minutas.py minuta` y corrige lo que reporte. Los documentos no enlazan a archivos locales: los minutos van como texto.
+
 ## 7. Contexto para otra sesión (si `entregables` lo incluye o el usuario lo pide)
 
 Sirve para pasarle lo discutido a otra sesión de Claude, por ejemplo la que implementa lo acordado. Usa `references/contexto-agente.md`. Escríbelo para un agente, no para una persona: definiciones exactas, rutas de código verificadas y qué cambia respecto a lo que esa sesión ya da por cierto.
@@ -145,7 +154,8 @@ Guárdalo como `<salida>/contexto-<tema>.md` y, si lo pide, cópialo al portapap
 
 ## 8. Entrega
 
-- Lista los archivos con su ruta absoluta.
+- Lista los archivos con su ruta absoluta. Menciona que en la transcripción ilustrada se puede buscar y, si hay grabación, hacer clic en una frase para escucharla (enlaza la grabación: si se mueve, el reproductor avisa).
+- Si no los pidió, ofrece en una línea exportar la minuta a PDF, Word o CSV de pendientes.
 - Di qué tan confiable es la transcripción: si es automática, si tiene hablantes y qué términos corregiste. Di cuántas citas se verificaron (la línea "Evidencia" del comando `minuta`).
 - Menciona que `_revision/` y `_registro/` son de trabajo y se pueden borrar.
 - Si corregiste términos que no estaban en el glosario, ofrece guardarlos en `.minutas-video/glosario.toml` del proyecto (formato en `references/configuracion.md`) para que la próxima vez se detecten solos. Para configurar todo con calma: `/minutas-video:configurar`.

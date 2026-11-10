@@ -11,6 +11,7 @@ Una reunión inventada, "Revisión de lanzamiento de Mesa Lista", con todas las 
 | `transcripcion-ilustrada.html` | Descárgalo junto con `capturas/` y ábrelo en el navegador; GitHub solo muestra su código |
 | [`minuta.json`](minuta.json) | Lo que redacta Claude a partir de todo lo anterior: cada acuerdo y pendiente con su momento, su cita y su captura |
 | [`minuta.md`](minuta.md) | La minuta que genera `minutas.py minuta` tras verificar las citas (aquí, 20 de 20) |
+| [`minuta.pdf`](minuta.pdf) · `minuta.docx` · [`pendientes.csv`](pendientes.csv) | La minuta para compartir, de `minutas.py exportar` |
 
 No hay video: las pantallas y el diálogo los genera [`dev/generar_demo.py`](../../dev/generar_demo.py). Para regenerar todo desde la raíz del repo:
 
@@ -20,4 +21,7 @@ uv run --script skills/procesar-reunion/scripts/importar_transcripcion.py docs/e
 uv run --script skills/procesar-reunion/scripts/ocr_capturas.py docs/ejemplo
 uv run --script skills/procesar-reunion/scripts/armar_html.py docs/ejemplo --titulo "Revisión de lanzamiento · Mesa Lista" --nota "Demostración con datos ficticios: transcripción importada de un .vtt con hablantes y pantallas generadas por dev/generar_demo.py."
 uv run --script skills/procesar-reunion/scripts/minutas.py minuta docs/ejemplo
+uv run --script skills/procesar-reunion/scripts/minutas.py exportar docs/ejemplo
 ```
+
+Como no hay video, la transcripción ilustrada del ejemplo no tiene reproductor; la búsqueda y el filtro por hablante sí funcionan.
