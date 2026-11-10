@@ -4,7 +4,11 @@ Pendientes del plugin, agrupados por versión. Al terminar uno, se borra de aqu�
 
 ## 0.4 · Quién dijo qué
 
-- **Separar hablantes.** pyannote.audio con el modelo community-1 en GPU, recibiendo el audio que ya decodifica PyAV. Respaldo en CPU con sherpa-onnx. Cada palabra se asigna a un hablante con las marcas de tiempo por palabra de faster-whisper. Requiere una cuenta de Hugging Face y aceptar las condiciones del modelo; el token va en `userConfig` como dato sensible. El error de hablantes se mide contra el `.vtt` que exporta Teams.
+- **Separar hablantes, sin cuentas por defecto.** El resultado es "Hablante 1, Hablante 2…"; los nombres se siguen deduciendo con evidencia, y el `.vtt` de la plataforma, cuando existe, sigue siendo mejor.
+  - **Por defecto, sherpa-onnx:** el modelo de segmentación de pyannote 3.0 convertido (MIT) y un modelo de voces (3D-Speaker, NeMo o WeSpeaker), descargados de GitHub sin registro. Corre en CPU y recibe el audio que ya decodifica PyAV.
+  - **Opcional, pyannote community-1:** para quien quiera más precisión. Sus modelos en Hugging Face piden cuenta, aceptar condiciones y token (verificado el 2026-11-09), así que cada usuario lo activa a propósito: el token va en `userConfig` como dato sensible.
+  - **Decidir con datos.** Antes de implementar la opción de pyannote, comparar las dos rutas contra el `.vtt` de Teams de una reunión real (error de hablantes y tiempo). Si sherpa-onnx queda cerca, pyannote no entra. Hace falta una grabación con su `.vtt`.
+  - Cada palabra se asigna a un hablante con las marcas de tiempo por palabra de faster-whisper.
 - **Ajustes de calidad de Whisper.** Marcas de tiempo por palabra, `hallucination_silence_threshold` y tramos de baja confianza marcados en el HTML. Solo si las pruebas muestran mejora.
 - **Plantillas por tipo de reunión:** general, requisitos con proveedor, seguimiento, daily, retrospectiva, entrevista, capacitación. Cada proyecto puede agregar las suyas.
 
